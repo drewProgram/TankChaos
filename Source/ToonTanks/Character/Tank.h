@@ -38,7 +38,11 @@ public:
 
 	virtual void HandleDestruction() override;
 
-	void GetSkillData(FSkillData& SD);
+	UFUNCTION(BlueprintImplementableEvent)
+	void SetBPSkill(FGameplayTag SkillType);
+
+	void SetSkill(FGameplayTag SkillType);
+	void SetSkillData(FSkillData Data);
 
 	FVector GetTurretLookDirection();
 
@@ -82,6 +86,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* ShootSpecialAction;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	FSkillData SkillData;
 };

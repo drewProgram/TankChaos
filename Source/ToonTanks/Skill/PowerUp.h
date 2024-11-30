@@ -22,6 +22,8 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
+	void SetPassive(FPassive P);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

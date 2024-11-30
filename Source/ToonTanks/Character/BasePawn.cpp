@@ -6,6 +6,7 @@
 #include "../Weapons/Projectile.h"
 #include "../Attributes/HealthComponent.h"
 #include "../Attributes/AttributesComponent.h"
+#include "../TTGameplayTags.h"
 
 
 // Sets default values
@@ -27,7 +28,6 @@ ABasePawn::ABasePawn()
 	ProjectileSpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("Projectile Spawn Point"));
 	ProjectileSpawnPoint->SetupAttachment(TurretMesh);
 
-	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
 	AttributesComponent = CreateDefaultSubobject<UAttributesComponent>(TEXT("Attributes Component"));
 }
 
@@ -35,7 +35,6 @@ ABasePawn::ABasePawn()
 void ABasePawn::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 void ABasePawn::Shoot()
@@ -47,6 +46,26 @@ void ABasePawn::Shoot()
 	if (Projectile)
 	{
 		Projectile->SetOwner(this);
+		AActor* PO = Projectile->GetOwner();
+		if (PO != nullptr)
+		{
+			UE_LOG(LogTemp, Display, TEXT("Owner set successfuly. Owner: %s"), *PO->GetActorLabel());
+			
+			Projectile->SetStats(AttributesComponent->GetDamageModifier());
+			FGameplayTagContainer ProjectileTags;
+			if (!AttributesComponent->GetElementalDamage().PassiveId.IsValid())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Don't have elemental ammo. Normal damage"));
+				ProjectileTags.AddTag(TTGameplayTags::Damage_Physical);
+				Projectile->ApplyCustomTags(ProjectileTags);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Display, TEXT("Passive: %s"), *AttributesComponent->GetElementalDamage().PassiveType.ToString());
+				ProjectileTags.AddTag(AttributesComponent->GetElementalDamage().PassiveType);
+				Projectile->ApplyCustomTags(ProjectileTags);
+			}
+		}
 	}
 }
 

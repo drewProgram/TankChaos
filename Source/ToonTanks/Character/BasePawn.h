@@ -35,6 +35,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UAttributesComponent* GetAttributesComponent();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void SetBuggedVFX();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void SetChilledVFX();
 
 protected:
 	// Called when the game starts or when spawned
@@ -57,15 +62,13 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float MoveSpeed;
 
+	UPROPERTY(VisibleAnywhere, Category = "Combat")
+	UAttributesComponent* AttributesComponent;
+
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	TSubclassOf<class AProjectile> ProjectileClass;
 
-	UPROPERTY(VisibleAnywhere, Category = "Combat")
-	UHealthComponent* HealthComponent;
-
-	UPROPERTY(VisibleAnywhere, Category = "Combat")
-	UAttributesComponent* AttributesComponent;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	USoundBase* DeathSound;

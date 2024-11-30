@@ -44,3 +44,8 @@ void APowerUp::Tick(float DeltaTime)
 
 }
 
+void APowerUp::SetPassive(FPassive P)
+{
+	Passive = P;
+}
+

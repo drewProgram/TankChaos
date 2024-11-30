@@ -22,16 +22,19 @@ struct FSkillData
 
 	FSkillData();
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	FGameplayTag SkillType;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	FString Name;
 
 	UPROPERTY(EditAnywhere)
 	float Damage;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere)
+	int32 MaxUses;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<ASkill> SkillClass;
 
 	UPROPERTY()
@@ -42,6 +45,11 @@ struct FSkillData
 	bool RequestCastSkill(FVector SpawnLocation, float Range, UWorld* WorldRef);
 
 	void NotifySkillEnded();
+
+	void UpdateSkillCount();
+
+private:
+	int32 UsesLeft;
 };
 
 UCLASS()

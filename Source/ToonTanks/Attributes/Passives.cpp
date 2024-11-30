@@ -17,14 +17,15 @@ void FPassive::Apply(UAttributesComponent* Ref, UWorld* WorldRef)
 		if (PassiveType.MatchesTagExact(TTGameplayTags::Damage_Physical))
 		{
 			Ref->DamageStack.Add(this);
+			Ref->UpdateDamageModifier();
 		}
 		else if (PassiveType.MatchesTagExact(TTGameplayTags::Damage_Elemental_Ice))
 		{
-			Ref->ElementalPassive = this;
+			Ref->ElementalPassive = *this;
 		}
 		else if (PassiveType.MatchesTagExact(TTGameplayTags::Damage_Elemental_Lightning))
 		{
-			Ref->ElementalPassive = this;
+			Ref->ElementalPassive = *this;
 		}
 	}
 	else if (PassiveType.MatchesTag(TTGameplayTags::Status))
@@ -45,7 +46,7 @@ void FPassive::Apply(UAttributesComponent* Ref, UWorld* WorldRef)
 			Ref->AddPassive(FireRateDebuff);
 			Ref->AddPassive(MoveSpeedDebuff);
 
-			Ref->StatusPassive = this;
+			Ref->StatusPassive = *this;
 		}
 		else if (PassiveType.MatchesTagExact(TTGameplayTags::Status_Chilled))
 		{
@@ -63,7 +64,7 @@ void FPassive::Apply(UAttributesComponent* Ref, UWorld* WorldRef)
 			Ref->AddPassive(FireRateDebuff);
 			Ref->AddPassive(MoveSpeedDebuff);
 
-			Ref->StatusPassive = this;
+			Ref->StatusPassive = *this;
 		}
 	}
 	else if (PassiveType.MatchesTag(TTGameplayTags::Skill))
@@ -78,32 +79,30 @@ void FPassive::Apply(UAttributesComponent* Ref, UWorld* WorldRef)
 			if (PassiveType.MatchesTagExact(TTGameplayTags::Skill_Acid))
 			{
 				UE_LOG(LogTemp, Display, TEXT("Applying acid skill"));
+				MyOwner->SetSkill(TTGameplayTags::Skill_Acid);
 			}
 			else if (PassiveType.MatchesTagExact(TTGameplayTags::Skill_Laser))
 			{
-				FSkillData SkillData;
-				MyOwner->GetSkillData(SkillData);
-
-				SkillData.SkillType = TTGameplayTags::Skill_Laser;
+				MyOwner->SetSkill(TTGameplayTags::Skill_Laser);
 			}
 		}
 	}
 	else if (PassiveType.MatchesTag(TTGameplayTags::Attribute))
 	{
-		UE_LOG(LogTemp, Display, TEXT("Entrou em Attribute"));
 		if (PassiveType.MatchesTagExact(TTGameplayTags::Attribute_Health))
 		{
-			UE_LOG(LogTemp, Display, TEXT("Entrou em Attribute Health"));
 			Ref->HealthStack.Add(this);
 			Ref->UpdateHealthModifier();
 		}
 		else if (PassiveType.MatchesTagExact(TTGameplayTags::Attribute_FireRate))
 		{
 			Ref->FireRateStack.Add(this);
+			Ref->UpdateFireRateModifier();
 		}
 		else if (PassiveType.MatchesTagExact(TTGameplayTags::Attribute_MovementSpeed))
 		{
 			Ref->MovementSpeedStack.Add(this);
+			Ref->UpdateMovementSpeedModifier();
 		}
 	}
 
@@ -111,10 +110,7 @@ void FPassive::Apply(UAttributesComponent* Ref, UWorld* WorldRef)
 	{
 		FTimerDelegate Del;
 
-		UE_LOG(LogTemp, Warning, TEXT("Antes da lambda; PassiveId fora: %s"), *PassiveId.ToString());
-
 		Del.BindLambda([=, *this] {
-			UE_LOG(LogTemp, Warning, TEXT("Passando por lambda; PassiveId dentro: %s"), *PassiveId.ToString());
 			Ref->RemovePassive(PassiveId);
 		});
 
@@ -136,7 +132,7 @@ void FPassive::Apply(UAttributesComponent* Ref, UWorld* WorldRef)
 
 void FPassive::Remove(UAttributesComponent* Ref)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Passive type: %s"), *PassiveType.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("Removing passive: %s"), *PassiveType.ToString());
 	// decide which type of passive is
 	if (PassiveType.MatchesTag(TTGameplayTags::Damage))
 	{
@@ -146,23 +142,24 @@ void FPassive::Remove(UAttributesComponent* Ref)
 		}
 		else if (PassiveType.MatchesTagExact(TTGameplayTags::Damage_Elemental_Ice))
 		{
-			Ref->ElementalPassive = nullptr;
+			Ref->ElementalPassive = FPassive();
 		}
 		else if (PassiveType.MatchesTagExact(TTGameplayTags::Damage_Elemental_Lightning))
 		{
-			Ref->ElementalPassive = nullptr;
+			Ref->ElementalPassive = FPassive();
 		}
 	}
 	else if (PassiveType.MatchesTag(TTGameplayTags::Status))
 	{
 		if (PassiveType.MatchesTagExact(TTGameplayTags::Status_Bugged))
 		{
-			Ref->StatusPassive = nullptr;
+			Ref->StatusPassive = FPassive();
 		}
 		else if (PassiveType.MatchesTagExact(TTGameplayTags::Status_Chilled))
 		{
-			Ref->StatusPassive = nullptr;
+			Ref->StatusPassive = FPassive();
 		}
+		Ref->OnStatusRemoved.Broadcast();
 	}
 	else if (PassiveType.MatchesTag(TTGameplayTags::Skill))
 	{
@@ -178,18 +175,17 @@ void FPassive::Remove(UAttributesComponent* Ref)
 				UE_LOG(LogTemp, Display, TEXT("Removing acid skill"));
 
 				FSkillData SkillData;
-				MyOwner->GetSkillData(SkillData);
-
 				SkillData.SkillType = FGameplayTag::EmptyTag;
+				MyOwner->SetSkillData(SkillData);
+
 			}
 			else if (PassiveType.MatchesTagExact(TTGameplayTags::Skill_Laser))
 			{
-				FSkillData SkillData;
-				MyOwner->GetSkillData(SkillData);
-
-				SkillData.SkillType = FGameplayTag::EmptyTag;
-
 				UE_LOG(LogTemp, Display, TEXT("Removing Laser Skill"));
+
+				FSkillData SkillData;
+				SkillData.SkillType = FGameplayTag::EmptyTag;
+				MyOwner->SetSkillData(SkillData);
 			}
 		}
 	}

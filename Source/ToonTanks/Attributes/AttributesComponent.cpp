@@ -1,9 +1,12 @@
 #include "AttributesComponent.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 #include "../Character/Tank.h"
+#include "../Character/Tower.h"
 #include "../Skill/Skill.h"
+#include "../Weapons/Projectile.h"
 #include "../TTGameplayTags.h"
 #include "../Core/ToonTanksGameMode.h"
 
@@ -12,7 +15,9 @@ UAttributesComponent::UAttributesComponent()
 	: BaseHealth(200),
 	DamageModifier(0),
 	Health(0),
-	FireRate(2.f)
+	FireRate(0),
+	BaseFireRate(60.f),
+	BaseMovementSpeed(500.f)
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -27,29 +32,25 @@ void UAttributesComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GetOwner()->OnTakeAnyDamage.AddDynamic(this, &UAttributesComponent::DamageTaken);
+
 	// Can change the modifiers
 	InitPassives();
 
 	Health = BaseHealth + (BaseHealth * HealthModifier);
-	MovementSpeed += MovementSpeed * MovementSpeedModifier;
-	FireRate += FireRate * FireRateModifier;
+	MovementSpeed = BaseMovementSpeed + (BaseMovementSpeed * MovementSpeedModifier);
+	FireRate = BaseFireRate + (BaseFireRate * FireRateModifier);
 }
 
 
 void UAttributesComponent::InitPassives()
 {
-	// Pass through all passives and apply the modifiers
-	//if (Passives.IsEmpty())
-	//{
-	//	UE_LOG(LogTemp, Display, TEXT("Passives array of %s is empty"), *GetOwner()->GetActorLabel());
-	//	return;
-	//}
-
-	//// check if has global modifiers to apply
-	//for (FPassive Passive : Passives)
-	//{
-	//	Passive.Apply(this);
-	//}
+	AToonTanksGameMode* GameMode = Cast<AToonTanksGameMode>(UGameplayStatics::GetGameMode(this));
+	if (GameMode)
+	{
+		HealthModifier = GameMode->GetEnemyHealthBonus() / 100;
+		DamageModifier = GameMode->GetEnemyDamageBonus() / 100;
+	}
 }
 
 void UAttributesComponent::DamageTaken(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* Instigator, AActor* DamageCauser)
@@ -59,6 +60,54 @@ void UAttributesComponent::DamageTaken(AActor* DamagedActor, float Damage, const
 	{
 		Health -= Damage;
 
+		if (ATower* Tower = Cast<ATower>(DamagedActor))
+		{
+			if (AProjectile* Projectile = Cast<AProjectile>(DamageCauser))
+			{
+				FGameplayTag DamageTag = Projectile->GetDamageType();
+
+				// TODO: add easier way to control debuff properties (edit values in the editor, not in code)
+				if (DamageTag.MatchesTag(TTGameplayTags::Damage_Elemental_Lightning))
+				{
+					UE_LOG(LogTemp, Display, TEXT("Lightning Damage!!"));
+					if (UKismetMathLibrary::RandomBoolWithWeight(0.5f))
+					{
+						// 50% chance of stun
+						UE_LOG(LogTemp, Warning, TEXT("Stun!!"));
+						FPassive Stun;
+
+						Stun.PassiveType = TTGameplayTags::Status_Bugged;
+						Stun.Modifier = -100.f;
+						Stun.MaxDuration = 15.f;
+
+						ABasePawn* MyOwner = Cast<ABasePawn>(GetOwner());
+						OnStatusApplied.Broadcast(Stun.PassiveType, Stun.MaxDuration);
+						MyOwner->SetBuggedVFX();
+						AddPassive(Stun);
+					}
+				}
+				else if (DamageTag.MatchesTag(TTGameplayTags::Damage_Elemental_Ice))
+				{
+					UE_LOG(LogTemp, Display, TEXT("Ice Damage!!"));
+					// 60% chance of slow
+					if (UKismetMathLibrary::RandomBoolWithWeight(0.6f))
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Slow!!"));
+
+						FPassive Chill;
+
+						Chill.PassiveType = TTGameplayTags::Status_Chilled;
+						Chill.Modifier = -50.f;
+						Chill.MaxDuration = 2.f;
+
+						ABasePawn* MyOwner = Cast<ABasePawn>(GetOwner());
+						MyOwner->SetChilledVFX();
+						OnStatusApplied.Broadcast(Chill.PassiveType, Chill.MaxDuration);
+						AddPassive(Chill);
+					}
+				}
+			}
+		}
 		if (Health <= 0)
 		{
 			AToonTanksGameMode* GameMode = Cast<AToonTanksGameMode>(UGameplayStatics::GetGameMode(this));
@@ -91,12 +140,21 @@ void UAttributesComponent::UpdateHealthModifier()
 
 float UAttributesComponent::GetFireRate()
 {
-	return FireRate;
+	if (FireRate <= 0)
+	{
+		UE_LOG(LogTemp, Display, TEXT("retuning 0"));
+		return 0;
+	}
+
+	UE_LOG(LogTemp, Display, TEXT("FireRate: %f"), FireRate);
+	float FireRateSeconds = 60 / FireRate;
+	return FireRateSeconds;
 }
 
 void UAttributesComponent::UpdateFireRateModifier()
 {
 	FireRateModifier = FireRateStack.GetTotalModifier() / 100;
+	FireRate = BaseFireRate + (BaseFireRate * FireRateModifier);
 }
 
 void UAttributesComponent::UpdateDamageModifier()
@@ -115,9 +173,25 @@ float UAttributesComponent::GetMovementSpeed()
 	return MovementSpeed;
 }
 
+FPassive UAttributesComponent::GetElementalDamage()
+{
+	return ElementalPassive;
+}
+
 void UAttributesComponent::UpdateMovementSpeedModifier()
 {
 	MovementSpeedModifier = MovementSpeedStack.GetTotalModifier() / 100;
+	MovementSpeed = BaseMovementSpeed + (BaseMovementSpeed * MovementSpeedModifier);
+}
+
+FPassive UAttributesComponent::GetStatusPassive()
+{
+	return StatusPassive;
+}
+
+FPassive UAttributesComponent::GetElementalPassive()
+{
+	return ElementalPassive;
 }
 
 void UAttributesComponent::AddPassive(FPassive Passive)

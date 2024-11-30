@@ -11,16 +11,22 @@
 #include "AttributesComponent.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStatusAppliedDelegate, FGameplayTag, float);
+DECLARE_MULTICAST_DELEGATE(FOnStatusRemovedDelegate);
+
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class TOONTANKS_API UAttributesComponent : public UActorComponent
 {
 	friend struct FPassive;
 
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UAttributesComponent();
+
+	FOnStatusAppliedDelegate OnStatusApplied;
+	FOnStatusRemovedDelegate OnStatusRemoved;
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -49,8 +55,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetMovementSpeed();
 
+	UFUNCTION()
+	FPassive GetElementalDamage();
+
 	UFUNCTION(BlueprintCallable)
 	void UpdateMovementSpeedModifier();
+
+	FPassive GetStatusPassive();
+	FPassive GetElementalPassive();
 
 	void AddPassive(FPassive Passive);
 
@@ -71,11 +83,18 @@ private:
 	int32 Health;
 	float HealthModifier;
 
+	// RPM
 	UPROPERTY(EditAnywhere, Category = "Base Attributes")
+	float BaseFireRate;
+
+	UPROPERTY(VisibleAnywhere, Category = "Attributes")
 	float FireRate;
 	float FireRateModifier;
-		
+
 	UPROPERTY(EditAnywhere, Category = "Base Attributes")
+	float BaseMovementSpeed;
+
+	UPROPERTY(VisibleAnywhere, Category = "Attributes")
 	float MovementSpeed;
 	float MovementSpeedModifier;
 
@@ -93,11 +112,11 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Passives")
 	FPassiveStack DamageStack;
 
-	FPassive* StatusPassive;
+	FPassive StatusPassive;
 
-	FPassive* ElementalPassive;
+	FPassive ElementalPassive;
 
-	UPROPERTY(EditAnywhere, Category  = "Passives")
+	UPROPERTY(EditAnywhere, Category = "Passives")
 	TArray<FPassive> Passives;
 
 	void InitPassives();

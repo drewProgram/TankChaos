@@ -34,6 +34,15 @@ bool FSkillData::RequestCastSkill(FVector SpawnLocation, float Range, UWorld* Wo
 	FTimerHandle TimerHandle;
 	FTimerDelegate Del;
 
+	if (SkillClass)
+	{
+		UE_LOG(LogTemp, Display, TEXT("Skill class exists"));
+		ASkill* SkillRef = WorldRef->SpawnActor<ASkill>(SkillClass, SpawnLocation, FRotator());
+
+
+		UE_LOG(LogTemp, Display, TEXT("Skill class name: %s"), *SkillRef->GetActorNameOrLabel());
+	}
+
 	Del.BindLambda([this] {
 		NotifySkillEnded();
 	});
@@ -64,7 +73,10 @@ void FSkillData::NotifySkillEnded()
 	HasSkillEnded = true;
 }
 
-
+void FSkillData::UpdateSkillCount()
+{
+	UsesLeft = MaxUses;
+}
 
 // Sets default values
 ASkill::ASkill()

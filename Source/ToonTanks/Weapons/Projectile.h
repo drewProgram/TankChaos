@@ -29,10 +29,16 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ApplyCustomTags(FGameplayTagContainer TagContainer);
 
+	UFUNCTION()
+	void SetStats(float DmgModifier);
+
+	UFUNCTION()
+	FGameplayTag GetDamageType();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-private:
+
 	UPROPERTY(EditDefaultsOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* ProjectileMesh;
 

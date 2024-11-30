@@ -7,6 +7,20 @@
 
 class UAttributesComponent;
 
+UENUM(BlueprintType)
+enum class EPassiveType : uint8
+{
+	HEALTH,
+	MOVEMENT_SPEED,
+	FIRE_RATE,
+	DAMAGE_PHYSICAL,
+	DAMAGE_LIGHTNING,
+	DAMAGE_ICE,
+	SKILL_LASER,
+	SKILL_ACID,
+	END
+};
+
 USTRUCT(BlueprintType)
 struct FPassive
 {

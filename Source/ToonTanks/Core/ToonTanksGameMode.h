@@ -6,6 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "ToonTanksGameMode.generated.h"
 
+DECLARE_DELEGATE(FOnWaveStartedDelegate);
+
 /**
  * 
  */
@@ -18,6 +20,16 @@ public:
 	AToonTanksGameMode();
 
 	void ActorDied(AActor* DeadActor);
+
+	int32 GetTargetTowerCount();
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetTotalEnemies();
+
+	float GetEnemyHealthBonus();
+	float GetEnemyDamageBonus();
+
+	FOnWaveStartedDelegate OnWaveStarted;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -27,6 +39,7 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void GameOver(bool bWonGame);
+
 
 private:
 	class ATank* Tank;
@@ -38,6 +51,16 @@ private:
 	void HandleGameStart();
 
 	int32 TargetTowers;
+	int32 TotalEnemies;
+	int32 CurrentWave;
 
-	int32 GetTargetTowerCount();
+	UPROPERTY(EditDefaultsOnly, Category = "Global Enemy Attribute Bonus")
+	float EnemyHealthBonus;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Global Enemy Attribute Bonus")
+	float EnemyDamageBonus;
+
+	void HandleWaveChange();
+
+	void SpawnNewEnemies();
 };

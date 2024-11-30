@@ -5,7 +5,7 @@
 #include "GameFramework/DamageType.h"
 #include "Kismet/GameplayStatics.h"
 
-#include "../Character/Tank.h"
+#include "../Character/BasePawn.h"
 #include "../TTGameplayTags.h"
 #include "../Attributes/AttributesComponent.h"
 
@@ -13,7 +13,7 @@
 AProjectile::AProjectile()
 	: BaseDamage(50.f), DamageModifier(0.f)
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
@@ -28,11 +28,10 @@ AProjectile::AProjectile()
 void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	 
+
 	ProjectileMesh->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
 
-
-	ATank* MyOwner = Cast<ATank>(GetOwner());
+	ABasePawn* MyOwner = Cast<ABasePawn>(GetOwner());
 	if (MyOwner)
 	{
 		DamageModifier = MyOwner->GetAttributesComponent()->GetDamageModifier();
@@ -81,14 +80,27 @@ void AProjectile::ApplyCustomTags(FGameplayTagContainer TagContainer)
 	}
 }
 
+void AProjectile::SetStats(float DmgModifier)
+{
+	DamageModifier = DmgModifier;
+	Damage = BaseDamage + (BaseDamage * DamageModifier);
+}
+
+FGameplayTag AProjectile::GetDamageType()
+{
+	return DamageType;
+}
+
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	AActor* MyOwner = GetOwner();
 	if (MyOwner == nullptr)
 	{
+		UE_LOG(LogTemp, Display, TEXT("Owner null"));
 		Destroy();
 		return;
 	}
+
 
 	AController* MyOwnerInstigator = MyOwner->GetInstigatorController();
 	UClass* DamageTypeClass = UDamageType::StaticClass();
@@ -96,6 +108,8 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 
 	if (OtherActor && OtherActor != this && OtherActor != MyOwner)
 	{
+		UE_LOG(LogTemp, Display, TEXT("Will apply %f damage"), Damage);
+		UE_LOG(LogTemp, Display, TEXT("Damage of type: %s"), *DamageType.ToString());
 		UGameplayStatics::ApplyDamage(OtherActor, Damage, MyOwnerInstigator, this, DamageTypeClass);
 		UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
 	}

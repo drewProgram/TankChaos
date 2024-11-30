@@ -19,15 +19,22 @@ class TOONTANKS_API ATower : public ABasePawn
 public:
 	ATower();
 
+	int32 Bory;
+
 	virtual void HandleDestruction() override;
 
 	virtual void Tick(float DeltaTime) override;
+	void RemoveCooldown();
 
 protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
 	void Turn(FVector Target);
+
+	UFUNCTION()
+	void HandleStatusApplied(FGameplayTag StatusTag, float Duration);
+	void HandleStatusRemoved();
 
 private:
 	UPROPERTY(VisibleAnywhere)
@@ -37,8 +44,9 @@ private:
 	float FireRange;
 
 	FTimerHandle FireRateTimerHandle;
-	float FireRate;
+
+	UPROPERTY(VisibleAnywhere)
+	bool bCanShoot;
 
 	bool CheckTankIsInRange();
-	void CheckFireCondition();
 };

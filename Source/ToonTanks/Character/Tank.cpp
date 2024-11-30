@@ -10,6 +10,7 @@
 #include "Camera/CameraShakeBase.h"
 
 #include "../TTGameplayTags.h"
+#include "../Attributes/AttributesComponent.h"
 
 ATank::ATank()
 	: TurnRate(200.f)
@@ -30,29 +31,6 @@ void ATank::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
-	{
-		FHitResult HitResult;
-		PlayerController->GetHitResultUnderCursor(
-		ECollisionChannel::ECC_Visibility,
-			false,
-			HitResult
-		);
-
-		DrawDebugSphere(
-			GetWorld(),
-			HitResult.ImpactPoint,
-			25.f,
-			12,
-			FColor::Red,
-			false,
-			-1.f
-		);
-
-		// TODO: find a way to turret mesh face the same direction that the camera
-
-	}
-
 	if (TagContainer.HasTagExact(TTGameplayTags::State_EndingCastSkill))
 	{
 		TagContainer.RemoveTag(TTGameplayTags::State_EndingCastSkill);
@@ -69,9 +47,21 @@ void ATank::HandleDestruction()
 	SetActorTickEnabled(false);
 }
 
-void ATank::GetSkillData(FSkillData& SD)
+void ATank::SetSkill(FGameplayTag SkillType)
 {
-	SD = SkillData;
+	SkillData.SkillType = SkillType;
+	if (SkillType.MatchesTagExact(TTGameplayTags::Skill_Laser))
+	{
+		SkillData.Damage = 400.f;
+		SkillData.MaxUses = 5;
+	}
+	SkillData.UpdateSkillCount();
+	SetBPSkill(SkillType);
+}
+
+void ATank::SetSkillData(FSkillData Data)
+{
+	SkillData = Data;
 }
 
 FVector ATank::GetTurretLookDirection()
@@ -104,8 +94,8 @@ void ATank::Move(const FInputActionValue& Value)
 	{
 		double DeltaTime = UGameplayStatics::GetWorldDeltaSeconds(GetWorld());
 		FVector DeltaLocation = FVector::ZeroVector;
-		DeltaLocation.X = MovementVector.Y * DeltaTime * MoveSpeed;
-		DeltaLocation.Y = MovementVector.X * DeltaTime * MoveSpeed;
+		DeltaLocation.X = MovementVector.Y * DeltaTime * AttributesComponent->GetMovementSpeed();
+		DeltaLocation.Y = MovementVector.X * DeltaTime * AttributesComponent->GetMovementSpeed();
 		AddActorLocalOffset(DeltaLocation, true);
 	}
 }
@@ -145,27 +135,29 @@ void ATank::ShootSpecial()
 	if (SkillData.SkillClass)
 	{
 		UE_LOG(LogTemp, Display, TEXT("Shooting special"));
-
-		FGameplayTagContainer StatesToCheck;
-		StatesToCheck.AddTag(TTGameplayTags::State_CastingSkill);
-		StatesToCheck.AddTag(TTGameplayTags::State_StartingCastSkill);
-		StatesToCheck.AddTag(TTGameplayTags::State_EndingCastSkill);
-
-		if (TagContainer.HasAnyExact(StatesToCheck))
+		if (SkillData.SkillType.IsValid())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Can't use special now"));
-			return;
-		}
-		TagContainer.AddTag(TTGameplayTags::State_StartingCastSkill);
+			FGameplayTagContainer StatesToCheck;
+			StatesToCheck.AddTag(TTGameplayTags::State_CastingSkill);
+			StatesToCheck.AddTag(TTGameplayTags::State_StartingCastSkill);
+			StatesToCheck.AddTag(TTGameplayTags::State_EndingCastSkill);
 
-		if (SkillData.RequestCastSkill(ProjectileSpawnPoint->GetComponentLocation(), 1000.f, GetWorld()))
-		{
-			TagContainer.RemoveTag(TTGameplayTags::State_StartingCastSkill);
-			TagContainer.AddTag(TTGameplayTags::State_CastingSkill);
-		}
-		else
-		{
-			TagContainer.RemoveTag(TTGameplayTags::State_StartingCastSkill);
+			if (TagContainer.HasAnyExact(StatesToCheck))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Can't use special now"));
+				return;
+			}
+			TagContainer.AddTag(TTGameplayTags::State_StartingCastSkill);
+
+			if (SkillData.RequestCastSkill(ProjectileSpawnPoint->GetComponentLocation(), 1000.f, GetWorld()))
+			{
+				TagContainer.RemoveTag(TTGameplayTags::State_StartingCastSkill);
+				TagContainer.AddTag(TTGameplayTags::State_CastingSkill);
+			}
+			else
+			{
+				TagContainer.RemoveTag(TTGameplayTags::State_StartingCastSkill);
+			}
 		}
 	}
 }

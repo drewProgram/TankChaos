@@ -7,7 +7,7 @@
 #include "../Character/ToonTanksPlayerController.h"
 
 AToonTanksGameMode::AToonTanksGameMode()
-	: StartDelay(3.f), TargetTowers(0)
+	: StartDelay(3.f), TargetTowers(0), CurrentWave(1), TotalEnemies(5)
 {
 
 }
@@ -37,7 +37,7 @@ void AToonTanksGameMode::ActorDied(AActor* DeadActor)
 
 		if (TargetTowers == 0)
 		{
-			GameOver(true);
+			HandleWaveChange();
 		}
 	}
 }
@@ -53,7 +53,6 @@ void AToonTanksGameMode::HandleGameStart()
 
 	if (PlayerController)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Player Controller not null"));
 		PlayerController->SetPlayerEnabledState(false);
 
 		FTimerHandle TimerHandle;
@@ -68,8 +67,33 @@ void AToonTanksGameMode::HandleGameStart()
 			StartDelay,
 			false
 		);
+
 	}
 
+}
+
+void AToonTanksGameMode::HandleWaveChange()
+{
+	CurrentWave += 1;
+
+	switch (CurrentWave)
+	{
+	case 2:
+	case 3:
+		UE_LOG(LogTemp, Display, TEXT("New wave appearing"));
+		EnemyHealthBonus += 10.f;
+		EnemyDamageBonus += 5.f;
+		TotalEnemies += 5;
+		TargetTowers = TotalEnemies;
+
+		break;
+
+	default:
+		GameOver(true);
+		break;
+	}
+
+	OnWaveStarted.ExecuteIfBound();
 }
 
 int32 AToonTanksGameMode::GetTargetTowerCount()
@@ -78,4 +102,19 @@ int32 AToonTanksGameMode::GetTargetTowerCount()
 	UGameplayStatics::GetAllActorsOfClass(this, ATower::StaticClass(), Towers);
 
 	return Towers.Num();
+}
+
+int32 AToonTanksGameMode::GetTotalEnemies()
+{
+	return TotalEnemies;
+}
+
+float AToonTanksGameMode::GetEnemyHealthBonus()
+{
+	return EnemyHealthBonus;
+}
+
+float AToonTanksGameMode::GetEnemyDamageBonus()
+{
+	return EnemyDamageBonus;
 }
