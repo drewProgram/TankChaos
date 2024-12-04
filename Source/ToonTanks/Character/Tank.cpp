@@ -34,7 +34,6 @@ void ATank::Tick(float DeltaTime)
 	if (TagContainer.HasTagExact(TTGameplayTags::State_EndingCastSkill))
 	{
 		TagContainer.RemoveTag(TTGameplayTags::State_EndingCastSkill);
-		SkillData.SkillType = FGameplayTag::EmptyTag;
 		UE_LOG(LogTemp, Display, TEXT("Skill ended"));
 	}
 }
@@ -47,12 +46,29 @@ void ATank::HandleDestruction()
 	SetActorTickEnabled(false);
 }
 
-void ATank::SetSkill(FGameplayTag SkillType)
+void ATank::SetSkillClass(TSubclassOf<class ASkill> SkillClass)
 {
+	SkillData.SkillClass = SkillClass;
+}
+
+void ATank::SetSkill(FGameplayTag SkillType, FGuid Id)
+{
+	// override skill if it's different from current skill
+	if (SkillData.SkillType.IsValid() && !SkillData.SkillType.MatchesTagExact(SkillType))
+	{
+		AttributesComponent->RemovePassive(SkillData.PassiveId);
+	}
+
 	SkillData.SkillType = SkillType;
+	SkillData.PassiveId = Id;
 	if (SkillType.MatchesTagExact(TTGameplayTags::Skill_Laser))
 	{
 		SkillData.Damage = 400.f;
+		SkillData.MaxUses = 5;
+	}
+	else if (SkillType.MatchesTagExact(TTGameplayTags::Skill_Acid))
+	{
+		SkillData.Damage = 100.f;
 		SkillData.MaxUses = 5;
 	}
 	SkillData.UpdateSkillCount();
@@ -137,6 +153,14 @@ void ATank::ShootSpecial()
 		UE_LOG(LogTemp, Display, TEXT("Shooting special"));
 		if (SkillData.SkillType.IsValid())
 		{
+			UE_LOG(LogTemp, Display, TEXT("Skill Type valid"));
+
+			if (SkillData.GetUsesLeft() <= 0)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("0 uses left of skill"));
+				return;
+			}
+
 			FGameplayTagContainer StatesToCheck;
 			StatesToCheck.AddTag(TTGameplayTags::State_CastingSkill);
 			StatesToCheck.AddTag(TTGameplayTags::State_StartingCastSkill);
@@ -147,8 +171,11 @@ void ATank::ShootSpecial()
 				UE_LOG(LogTemp, Warning, TEXT("Can't use special now"));
 				return;
 			}
+
+
 			TagContainer.AddTag(TTGameplayTags::State_StartingCastSkill);
 
+			SkillData.Owner = this;
 			if (SkillData.RequestCastSkill(ProjectileSpawnPoint->GetComponentLocation(), 1000.f, GetWorld()))
 			{
 				TagContainer.RemoveTag(TTGameplayTags::State_StartingCastSkill);

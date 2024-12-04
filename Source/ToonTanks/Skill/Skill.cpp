@@ -6,6 +6,7 @@
 
 #include "../Character/Tank.h"
 #include "../TTGameplayTags.h"
+#include "../Attributes/AttributesComponent.h"
 
 FSkillData::FSkillData()
 {
@@ -14,6 +15,11 @@ FSkillData::FSkillData()
 
 	Owner = nullptr;
 	SkillType = FGameplayTag::EmptyTag;
+}
+
+int32 FSkillData::GetUsesLeft()
+{
+	return UsesLeft;
 }
 
 bool FSkillData::RequestCastSkill(FVector SpawnLocation, float Range, UWorld* WorldRef)
@@ -25,8 +31,15 @@ bool FSkillData::RequestCastSkill(FVector SpawnLocation, float Range, UWorld* Wo
 
 	if (!WorldRef) return false;
 
+	if (UsesLeft <= 0) return false;
+
 	UE_LOG(LogTemp, Display, TEXT("Requesting skill"));
 	HasSkillEnded = false;
+
+	if (SkillType.MatchesTagExact(TTGameplayTags::Skill_Laser))
+	{
+
+	}
 
 	FVector LineStart = SpawnLocation;
 	FVector LineEnd = LineStart + (Owner->GetTurretLookDirection() * Range);
@@ -55,11 +68,10 @@ bool FSkillData::RequestCastSkill(FVector SpawnLocation, float Range, UWorld* Wo
 		false
 	);
 
-	// TODO: Spawn skill actor on world and put it on a pointer
-
 	// skill pointer
 	// ptr->OnSkillEnded.BindUObject(this, &ref, this)
-
+	
+	UsesLeft -= 1;
 
 	return true;
 }
@@ -70,6 +82,11 @@ void FSkillData::NotifySkillEnded()
 	Owner->TagContainer.RemoveTag(TTGameplayTags::State_CastingSkill);
 	Owner->TagContainer.AddTag(TTGameplayTags::State_EndingCastSkill);
 	UE_LOG(LogTemp, Display, TEXT("Tags end skill: %s"), *Owner->TagContainer.ToString());
+	if (UsesLeft == 0)
+	{
+		Owner->GetAttributesComponent()->RemovePassive(PassiveId);
+	}
+
 	HasSkillEnded = true;
 }
 

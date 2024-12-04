@@ -7,8 +7,6 @@
 
 void FPassive::Apply(UAttributesComponent* Ref, UWorld* WorldRef)
 {
-	bool bPassiveExists = Ref->DoesPassiveAlreadyExists(*this);
-
 	Duration = MaxDuration;
 
 	// decide which type of passive is
@@ -79,11 +77,11 @@ void FPassive::Apply(UAttributesComponent* Ref, UWorld* WorldRef)
 			if (PassiveType.MatchesTagExact(TTGameplayTags::Skill_Acid))
 			{
 				UE_LOG(LogTemp, Display, TEXT("Applying acid skill"));
-				MyOwner->SetSkill(TTGameplayTags::Skill_Acid);
+				MyOwner->SetSkill(TTGameplayTags::Skill_Acid, PassiveId);
 			}
 			else if (PassiveType.MatchesTagExact(TTGameplayTags::Skill_Laser))
 			{
-				MyOwner->SetSkill(TTGameplayTags::Skill_Laser);
+				MyOwner->SetSkill(TTGameplayTags::Skill_Laser, PassiveId);
 			}
 		}
 	}

@@ -15,6 +15,10 @@
 class ATank;
 class UCapsuleComponent;
 
+DECLARE_MULTICAST_DELEGATE(FOnSkillStartedDelegate)
+DECLARE_MULTICAST_DELEGATE(FOnSkillCastingDelegate)
+DECLARE_MULTICAST_DELEGATE(FOnSkillEndedDelegate)
+
 USTRUCT(BlueprintType)
 struct FSkillData
 {
@@ -28,6 +32,9 @@ struct FSkillData
 	UPROPERTY(EditAnywhere)
 	FString Name;
 
+	UPROPERTY(BlueprintReadOnly)
+	FGuid PassiveId;
+
 	UPROPERTY(EditAnywhere)
 	float Damage;
 
@@ -37,10 +44,16 @@ struct FSkillData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<ASkill> SkillClass;
 
+	FOnSkillStartedDelegate OnSkillStarted;
+	FOnSkillCastingDelegate OnSkillCasting;
+	FOnSkillEndedDelegate OnSkillEnded;
+
 	UPROPERTY()
 	ATank* Owner;
 
 	bool HasSkillEnded;
+
+	int32 GetUsesLeft();
 
 	bool RequestCastSkill(FVector SpawnLocation, float Range, UWorld* WorldRef);
 
@@ -49,6 +62,7 @@ struct FSkillData
 	void UpdateSkillCount();
 
 private:
+	UPROPERTY(VisibleAnywhere)
 	int32 UsesLeft;
 };
 
