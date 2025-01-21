@@ -24,15 +24,27 @@ public:
 
 	void SetPassive(FPassive P);
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void SetMesh();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 private:
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Rotation")
+	float PitchValue;
+
+	UPROPERTY(EditAnywhere, Category = "Rotation")
+	float YawValue;
+
+	UPROPERTY(EditAnywhere, Category = "Rotation")
+	float RollValue;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* PUMesh;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	FPassive Passive;
 
 	bool bAlreadySet;

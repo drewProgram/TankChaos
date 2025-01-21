@@ -4,7 +4,7 @@
 
 // Sets default values
 APowerUp::APowerUp()
-	: bAlreadySet(false)
+	: bAlreadySet(false), PitchValue(0.f), YawValue(1.5f), RollValue(0.f)
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -42,6 +42,12 @@ void APowerUp::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// on every frame change rotation for a smooth rotating actor
+	FRotator NewRotation = FRotator(PitchValue, YawValue, RollValue);
+
+	FQuat QuatRotation = FQuat(NewRotation);
+
+	AddActorLocalRotation(QuatRotation, false, 0, ETeleportType::None);
 }
 
 void APowerUp::SetPassive(FPassive P)

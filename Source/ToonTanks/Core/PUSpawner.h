@@ -62,6 +62,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Damage Ice")
 	float DamageIceDuration;
 
+	UPROPERTY(EditAnywhere, Category = "Skill Acid")
+	float SkillAcidDuration;
+
+	UPROPERTY(EditAnywhere, Category = "Skill Laser")
+	float SkillLaserDuration;
+
 	void SpawnPowerUp();
 	void RandomizePowerUp(struct FPassive& Passive);
 

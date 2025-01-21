@@ -44,11 +44,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetSkillClass(TSubclassOf<class ASkill> SkillClass);
 
-	void SetSkill(FGameplayTag SkillType, FGuid Id);
+	void SetSkill(FGameplayTag SkillType, float Duration, FGuid Id);
 	void SetSkillData(FSkillData Data);
 
 	FVector GetTurretLookDirection();
 
+	UPROPERTY(VisibleAnywhere)
 	FGameplayTagContainer TagContainer;
 
 protected:

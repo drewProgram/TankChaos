@@ -46,6 +46,7 @@ void APUSpawner::SpawnPowerUp()
 		
 		APowerUp* PU = GetWorld()->SpawnActor<APowerUp>(PowerUpClass, Location, Rotation);
 		PU->SetPassive(Passive);
+		PU->SetMesh();
 	}
 }
 
@@ -102,11 +103,13 @@ void APUSpawner::RandomizePowerUp(FPassive& Passive)
 	case EPassiveType::SKILL_ACID:
 		UE_LOG(LogTemp, Display, TEXT("Acid skill"));
 		Passive.PassiveType = TTGameplayTags::Skill_Acid;
+		Passive.MaxDuration = SkillAcidDuration;
 		break;
 
 	case EPassiveType::SKILL_LASER:
 		UE_LOG(LogTemp, Display, TEXT("Laser skill"));
 		Passive.PassiveType = TTGameplayTags::Skill_Laser;
+		Passive.MaxDuration = SkillLaserDuration;
 		break;
 	}
 }

@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+//#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 #include "GameplayTagContainer.h"
 
@@ -41,6 +43,12 @@ struct FSkillData
 	UPROPERTY(EditAnywhere)
 	int32 MaxUses;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float Range;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float Duration;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<ASkill> SkillClass;
 
@@ -48,14 +56,14 @@ struct FSkillData
 	FOnSkillCastingDelegate OnSkillCasting;
 	FOnSkillEndedDelegate OnSkillEnded;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	ATank* Owner;
 
 	bool HasSkillEnded;
 
 	int32 GetUsesLeft();
 
-	bool RequestCastSkill(FVector SpawnLocation, float Range, UWorld* WorldRef);
+	bool RequestCastSkill(FVector SpawnLocation, UWorld* WorldRef, FRotator Rotation = FRotator());
 
 	void NotifySkillEnded();
 
@@ -79,19 +87,31 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	FSkillData SkillData;
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void SetupSkillData(FSkillData SD);
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 private:
+	bool bTimerSet;
+
 	UFUNCTION()
 	void BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	UPROPERTY(VisibleAnywhere, Category = "Visual")
-	UStaticMeshComponent* SkillMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Visual", meta = (AllowPrivateAccess = "true"))
+	UNiagaraComponent* SkillParticle;
 
-	UPROPERTY(VisibleAnywhere, Category = "Combat")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	UCapsuleComponent* CapsuleCollider;
+
+	UFUNCTION(BlueprintCallable)
+	void SetDestroyTimer();
+
+	UFUNCTION()
+	void DestroyTest();
 };

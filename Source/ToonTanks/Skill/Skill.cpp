@@ -15,6 +15,7 @@ FSkillData::FSkillData()
 
 	Owner = nullptr;
 	SkillType = FGameplayTag::EmptyTag;
+	Duration = 1.f;
 }
 
 int32 FSkillData::GetUsesLeft()
@@ -22,7 +23,7 @@ int32 FSkillData::GetUsesLeft()
 	return UsesLeft;
 }
 
-bool FSkillData::RequestCastSkill(FVector SpawnLocation, float Range, UWorld* WorldRef)
+bool FSkillData::RequestCastSkill(FVector SpawnLocation, UWorld* WorldRef, FRotator Rotation)
 {
 	if (!HasSkillEnded)
 	{
@@ -50,8 +51,8 @@ bool FSkillData::RequestCastSkill(FVector SpawnLocation, float Range, UWorld* Wo
 	if (SkillClass)
 	{
 		UE_LOG(LogTemp, Display, TEXT("Skill class exists"));
-		ASkill* SkillRef = WorldRef->SpawnActor<ASkill>(SkillClass, SpawnLocation, FRotator());
-
+		ASkill* SkillRef = WorldRef->SpawnActor<ASkill>(SkillClass, SpawnLocation, Rotation);
+		SkillRef->SetupSkillData(*this);
 
 		UE_LOG(LogTemp, Display, TEXT("Skill class name: %s"), *SkillRef->GetActorNameOrLabel());
 	}
@@ -61,10 +62,11 @@ bool FSkillData::RequestCastSkill(FVector SpawnLocation, float Range, UWorld* Wo
 	});
 
 	// Outside classes we need to use a timer delegate to call a function (use a lambda to call the function you want)
+	UE_LOG(LogTemp, Display, TEXT("setting timer"));
 	WorldRef->GetTimerManager().SetTimer(
 		TimerHandle,
 		Del,
-		1.f,
+		Duration,
 		false
 	);
 
@@ -101,11 +103,13 @@ ASkill::ASkill()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	SkillMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Skill Mesh"));
-	RootComponent = SkillMesh;
+	SkillParticle = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Skill Particle"));
+	RootComponent = SkillParticle;
 
 	CapsuleCollider = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule Collider"));
-	CapsuleCollider->SetupAttachment(SkillMesh);
+	CapsuleCollider->SetupAttachment(SkillParticle);
+
+	bTimerSet = false;
 }
 
 // Called when the game starts or when spawned
@@ -121,9 +125,35 @@ void ASkill::BeginPlay()
 void ASkill::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	if (SkillData.SkillType.MatchesTagExact(TTGameplayTags::Skill_Laser))
+	{
+		FVector NewLocation =  SkillData.Owner->GetProjectileSpawnPoint()->GetComponentLocation();
+		FQuat NewQuat = SkillData.Owner->GetTurretMeshComponent()->GetComponentRotation().Quaternion();
+
+		SetActorLocationAndRotation(NewLocation, NewQuat);
+	}
 }
 
 void ASkill::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	UE_LOG(LogTemp, Display, TEXT("Being overlaped by: %s"), *OtherActor->GetActorNameOrLabel());
+}
+
+void ASkill::SetDestroyTimer()
+{
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(
+		TimerHandle,
+		this,
+		&ASkill::DestroyTest,
+		SkillData.Duration,
+		false
+	);
+}
+
+void ASkill::DestroyTest()
+{
+	UE_LOG(LogTemp, Display, TEXT("Destroying skill!"));
+	Destroy();
 }

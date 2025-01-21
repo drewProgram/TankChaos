@@ -88,3 +88,13 @@ UAttributesComponent* ABasePawn::GetAttributesComponent()
 {
 	return AttributesComponent;
 }
+
+USceneComponent* ABasePawn::GetProjectileSpawnPoint()
+{
+	return ProjectileSpawnPoint;
+}
+
+UStaticMeshComponent* ABasePawn::GetTurretMeshComponent()
+{
+	return TurretMesh;
+}

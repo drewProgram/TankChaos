@@ -51,7 +51,7 @@ void ATank::SetSkillClass(TSubclassOf<class ASkill> SkillClass)
 	SkillData.SkillClass = SkillClass;
 }
 
-void ATank::SetSkill(FGameplayTag SkillType, FGuid Id)
+void ATank::SetSkill(FGameplayTag SkillType, float Duration, FGuid Id)
 {
 	// override skill if it's different from current skill
 	if (SkillData.SkillType.IsValid() && !SkillData.SkillType.MatchesTagExact(SkillType))
@@ -61,14 +61,17 @@ void ATank::SetSkill(FGameplayTag SkillType, FGuid Id)
 
 	SkillData.SkillType = SkillType;
 	SkillData.PassiveId = Id;
+	SkillData.Duration = Duration;
 	if (SkillType.MatchesTagExact(TTGameplayTags::Skill_Laser))
 	{
 		SkillData.Damage = 400.f;
+		SkillData.Range = 500.0f;
 		SkillData.MaxUses = 5;
 	}
 	else if (SkillType.MatchesTagExact(TTGameplayTags::Skill_Acid))
 	{
 		SkillData.Damage = 100.f;
+		SkillData.Range = 200.0f;
 		SkillData.MaxUses = 5;
 	}
 	SkillData.UpdateSkillCount();
@@ -176,7 +179,7 @@ void ATank::ShootSpecial()
 			TagContainer.AddTag(TTGameplayTags::State_StartingCastSkill);
 
 			SkillData.Owner = this;
-			if (SkillData.RequestCastSkill(ProjectileSpawnPoint->GetComponentLocation(), 1000.f, GetWorld()))
+			if (SkillData.RequestCastSkill(ProjectileSpawnPoint->GetComponentLocation(), GetWorld(), TurretMesh->GetComponentRotation()))
 			{
 				TagContainer.RemoveTag(TTGameplayTags::State_StartingCastSkill);
 				TagContainer.AddTag(TTGameplayTags::State_CastingSkill);

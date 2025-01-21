@@ -37,7 +37,7 @@ struct FPassive
 	UPROPERTY(EditAnywhere)
 	float Modifier;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FGameplayTag PassiveType;
 
 	FTimerHandle TimerHandle;
