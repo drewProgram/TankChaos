@@ -2,11 +2,16 @@
 
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Components/CapsuleComponent.h"
 
 #include "../Character/Tank.h"
+#include "../Character/Tower.h"
+#include "../Core/DamageHandlerComponent.h"
 #include "../TTGameplayTags.h"
 #include "../Attributes/AttributesComponent.h"
+
+// Collision channel for skills: ECC_GameTraceChannel1
 
 FSkillData::FSkillData()
 {
@@ -44,7 +49,6 @@ bool FSkillData::RequestCastSkill(FVector SpawnLocation, UWorld* WorldRef, FRota
 
 	FVector LineStart = SpawnLocation;
 	FVector LineEnd = LineStart + (Owner->GetTurretLookDirection() * Range);
-	DrawDebugLine(WorldRef, LineStart, LineEnd, FColor::Red, false, 2.f, 0, 4.f);
 	FTimerHandle TimerHandle;
 	FTimerDelegate Del;
 
@@ -59,7 +63,7 @@ bool FSkillData::RequestCastSkill(FVector SpawnLocation, UWorld* WorldRef, FRota
 
 	Del.BindLambda([this] {
 		NotifySkillEnded();
-	});
+		});
 
 	// Outside classes we need to use a timer delegate to call a function (use a lambda to call the function you want)
 	UE_LOG(LogTemp, Display, TEXT("setting timer"));
@@ -72,7 +76,7 @@ bool FSkillData::RequestCastSkill(FVector SpawnLocation, UWorld* WorldRef, FRota
 
 	// skill pointer
 	// ptr->OnSkillEnded.BindUObject(this, &ref, this)
-	
+
 	UsesLeft -= 1;
 
 	return true;
@@ -100,7 +104,7 @@ void FSkillData::UpdateSkillCount()
 // Sets default values
 ASkill::ASkill()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	SkillParticle = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Skill Particle"));
@@ -109,6 +113,8 @@ ASkill::ASkill()
 	CapsuleCollider = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule Collider"));
 	CapsuleCollider->SetupAttachment(SkillParticle);
 
+	DamageHandlerComponent = CreateDefaultSubobject<UDamageHandlerComponent>(TEXT("DamageHandlerComponent"));
+
 	bTimerSet = false;
 }
 
@@ -116,28 +122,37 @@ ASkill::ASkill()
 void ASkill::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	UE_LOG(LogTemp, Display, TEXT("Skill spawned!"));
 
-	CapsuleCollider->OnComponentBeginOverlap.AddDynamic(this, &ASkill::BeginOverlap);
+	UE_LOG(LogTemp, Display, TEXT("Skill spawned!"));
 }
 
 void ASkill::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
+
+	// TODO: instead of updating each frame the position, attach this actor to the SpawnPoint in blueprint.
 	if (SkillData.SkillType.MatchesTagExact(TTGameplayTags::Skill_Laser))
 	{
-		FVector NewLocation =  SkillData.Owner->GetProjectileSpawnPoint()->GetComponentLocation();
+		FVector NewLocation = SkillData.Owner->GetProjectileSpawnPoint()->GetComponentLocation();
 		FQuat NewQuat = SkillData.Owner->GetTurretMeshComponent()->GetComponentRotation().Quaternion();
 
 		SetActorLocationAndRotation(NewLocation, NewQuat);
-	}
-}
 
-void ASkill::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	UE_LOG(LogTemp, Display, TEXT("Being overlaped by: %s"), *OtherActor->GetActorNameOrLabel());
+		TArray<AActor*> OverlappingActors;
+		CapsuleCollider->GetOverlappingActors(OverlappingActors);
+
+		for (AActor* OverlappedActor : OverlappingActors)
+		{
+			if (OverlappedActor != SkillData.Owner)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("OverlappedActor: %s"), *OverlappedActor->GetName());
+				if (!DamageHandlerComponent->TryDamage(OverlappedActor, SkillData.Damage))
+				{
+					UE_LOG(LogTemp, Display, TEXT("Can't damage actor now!"));
+				}
+			}
+		}
+	}
 }
 
 void ASkill::SetDestroyTimer()

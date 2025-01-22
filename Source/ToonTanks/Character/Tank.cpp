@@ -64,8 +64,8 @@ void ATank::SetSkill(FGameplayTag SkillType, float Duration, FGuid Id)
 	SkillData.Duration = Duration;
 	if (SkillType.MatchesTagExact(TTGameplayTags::Skill_Laser))
 	{
-		SkillData.Damage = 400.f;
-		SkillData.Range = 500.0f;
+		SkillData.Damage = 5.f;
+		SkillData.Range = 1000.0f;
 		SkillData.MaxUses = 5;
 	}
 	else if (SkillType.MatchesTagExact(TTGameplayTags::Skill_Acid))
