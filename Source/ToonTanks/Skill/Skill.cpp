@@ -4,11 +4,13 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/ShapeComponent.h"
 
 #include "../Character/Tank.h"
 #include "../Character/Tower.h"
 #include "../Core/DamageHandlerComponent.h"
 #include "../TTGameplayTags.h"
+#include "../SkillSpawner.h"
 #include "../Attributes/AttributesComponent.h"
 
 // Collision channel for skills: ECC_GameTraceChannel1
@@ -21,6 +23,7 @@ FSkillData::FSkillData()
 	Owner = nullptr;
 	SkillType = FGameplayTag::EmptyTag;
 	Duration = 1.f;
+	bSpawnsFromProjectile = false;
 }
 
 int32 FSkillData::GetUsesLeft()
@@ -30,7 +33,7 @@ int32 FSkillData::GetUsesLeft()
 
 bool FSkillData::RequestCastSkill(FVector SpawnLocation, UWorld* WorldRef, FRotator Rotation)
 {
-	if (!HasSkillEnded)
+	if (!HasSkillEnded && SkillNature.MatchesTag(TTGameplayTags::SkillNature_Spawner))
 	{
 		return false;
 	}
@@ -39,13 +42,10 @@ bool FSkillData::RequestCastSkill(FVector SpawnLocation, UWorld* WorldRef, FRota
 
 	if (UsesLeft <= 0) return false;
 
+
 	UE_LOG(LogTemp, Display, TEXT("Requesting skill"));
+	UE_LOG(LogTemp, Warning, TEXT("Skill nature: %s"), *SkillNature.GetTagName().ToString());
 	HasSkillEnded = false;
-
-	if (SkillType.MatchesTagExact(TTGameplayTags::Skill_Laser))
-	{
-
-	}
 
 	FVector LineStart = SpawnLocation;
 	FVector LineEnd = LineStart + (Owner->GetTurretLookDirection() * Range);
@@ -55,31 +55,55 @@ bool FSkillData::RequestCastSkill(FVector SpawnLocation, UWorld* WorldRef, FRota
 	if (SkillClass)
 	{
 		UE_LOG(LogTemp, Display, TEXT("Skill class exists"));
-		ASkill* SkillRef = WorldRef->SpawnActor<ASkill>(SkillClass, SpawnLocation, Rotation);
-		SkillRef->SetupSkillData(*this);
+		if (SkillNature.MatchesTagExact(TTGameplayTags::SkillNature_Spawner))
+		{
+			ASkillSpawner* SkillSpawnerRef = WorldRef->SpawnActor<ASkillSpawner>(SkillSpawner, SpawnLocation, Rotation);
+			SkillSpawnerRef->SetOwner(Owner);
+			SkillSpawnerRef->SetSkillData(*this);
 
-		UE_LOG(LogTemp, Display, TEXT("Skill class name: %s"), *SkillRef->GetActorNameOrLabel());
+			Del.BindLambda([this] {
+				NotifySkillEnded();
+				});
+
+			// timer to prevent many skill projectiles being shot at the same spot
+			WorldRef->GetTimerManager().SetTimer(
+				TimerHandle,
+				Del,
+				0.5f,
+				false
+			);
+
+			UsesLeft -= 1;
+
+			return true;
+		}
+		else
+		{
+			ASkill* SkillRef = WorldRef->SpawnActor<ASkill>(SkillClass, SpawnLocation, Rotation);
+			SkillRef->SetupSkillData(*this);
+			UE_LOG(LogTemp, Display, TEXT("Skill class name: %s"), *SkillRef->GetActorNameOrLabel());
+		}
+
+		Del.BindLambda([this] {
+			NotifySkillEnded();
+			});
+
+		// Outside classes we need to use a timer delegate to call a function (use a lambda to call the function you want)
+		WorldRef->GetTimerManager().SetTimer(
+			TimerHandle,
+			Del,
+			Duration,
+			false
+		);
+
+		UsesLeft -= 1;
+
+		return true;
 	}
 
-	Del.BindLambda([this] {
-		NotifySkillEnded();
-		});
+	UE_LOG(LogTemp, Error, TEXT("Skill class is nullptr"));
 
-	// Outside classes we need to use a timer delegate to call a function (use a lambda to call the function you want)
-	UE_LOG(LogTemp, Display, TEXT("setting timer"));
-	WorldRef->GetTimerManager().SetTimer(
-		TimerHandle,
-		Del,
-		Duration,
-		false
-	);
-
-	// skill pointer
-	// ptr->OnSkillEnded.BindUObject(this, &ref, this)
-
-	UsesLeft -= 1;
-
-	return true;
+	return false;
 }
 
 void FSkillData::NotifySkillEnded()
@@ -110,9 +134,6 @@ ASkill::ASkill()
 	SkillParticle = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Skill Particle"));
 	RootComponent = SkillParticle;
 
-	CapsuleCollider = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule Collider"));
-	CapsuleCollider->SetupAttachment(SkillParticle);
-
 	DamageHandlerComponent = CreateDefaultSubobject<UDamageHandlerComponent>(TEXT("DamageHandlerComponent"));
 
 	bTimerSet = false;
@@ -131,15 +152,17 @@ void ASkill::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	// TODO: instead of updating each frame the position, attach this actor to the SpawnPoint in blueprint.
-	if (SkillData.SkillType.MatchesTagExact(TTGameplayTags::Skill_Laser))
+	if (SkillData.SkillType.IsValid())
 	{
-		FVector NewLocation = SkillData.Owner->GetProjectileSpawnPoint()->GetComponentLocation();
-		FQuat NewQuat = SkillData.Owner->GetTurretMeshComponent()->GetComponentRotation().Quaternion();
+		if (SkillData.SkillType.MatchesTagExact(TTGameplayTags::Skill_Laser))
+		{
+			FVector NewLocation = SkillData.Owner->GetProjectileSpawnPoint()->GetComponentLocation();
+			FQuat NewQuat = SkillData.Owner->GetTurretMeshComponent()->GetComponentRotation().Quaternion();
 
-		SetActorLocationAndRotation(NewLocation, NewQuat);
-
+			SetActorLocationAndRotation(NewLocation, NewQuat);
+		}
 		TArray<AActor*> OverlappingActors;
-		CapsuleCollider->GetOverlappingActors(OverlappingActors);
+		SkillCollider->GetOverlappingActors(OverlappingActors);
 
 		for (AActor* OverlappedActor : OverlappingActors)
 		{
@@ -158,6 +181,7 @@ void ASkill::Tick(float DeltaTime)
 void ASkill::SetDestroyTimer()
 {
 	FTimerHandle TimerHandle;
+	UE_LOG(LogTemp, Display, TEXT("Timer set to %f seconds"), SkillData.Duration);
 	GetWorld()->GetTimerManager().SetTimer(
 		TimerHandle,
 		this,

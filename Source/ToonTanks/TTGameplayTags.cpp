@@ -16,6 +16,10 @@ namespace TTGameplayTags {
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Skill_Acid, "Skill.Acid", "Passive for Acid skill");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Skill_Laser, "Skill.Laser", "Passive for Laser skill");
 
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(SkillNature_Spawner, "SkillNature.Spawner", "Indicates this skill spawns another skill");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(SkillNature_Beam, "SkillNature.Beam", "Skill is a beam");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(SkillNature_Ground, "SkillNature.Ground", "Skill stays on the ground");
+
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Status, "Status", "Indicates its a status");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Status_Chilled, "Status.Chilled", "Passive for Chilled status");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Status_Bugged, "Status.Bugged", "Passive for Bugged status");

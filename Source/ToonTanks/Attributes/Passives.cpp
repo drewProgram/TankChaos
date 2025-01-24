@@ -77,11 +77,11 @@ void FPassive::Apply(UAttributesComponent* Ref, UWorld* WorldRef)
 			if (PassiveType.MatchesTagExact(TTGameplayTags::Skill_Acid))
 			{
 				UE_LOG(LogTemp, Display, TEXT("Applying acid skill"));
-				MyOwner->SetSkill(TTGameplayTags::Skill_Acid, Duration, PassiveId);
+				MyOwner->SetSkill(TTGameplayTags::Skill_Acid, TTGameplayTags::SkillNature_Spawner, Duration, PassiveId);
 			}
 			else if (PassiveType.MatchesTagExact(TTGameplayTags::Skill_Laser))
 			{
-				MyOwner->SetSkill(TTGameplayTags::Skill_Laser, Duration, PassiveId);
+				MyOwner->SetSkill(TTGameplayTags::Skill_Laser, TTGameplayTags::SkillNature_Beam, Duration, PassiveId);
 			}
 		}
 	}
@@ -174,6 +174,7 @@ void FPassive::Remove(UAttributesComponent* Ref)
 
 				FSkillData SkillData;
 				SkillData.SkillType = FGameplayTag::EmptyTag;
+				SkillData.SkillNature = FGameplayTag::EmptyTag;
 				MyOwner->SetSkillData(SkillData);
 
 			}
@@ -183,6 +184,7 @@ void FPassive::Remove(UAttributesComponent* Ref)
 
 				FSkillData SkillData;
 				SkillData.SkillType = FGameplayTag::EmptyTag;
+				SkillData.SkillNature = FGameplayTag::EmptyTag;
 				MyOwner->SetSkillData(SkillData);
 			}
 		}

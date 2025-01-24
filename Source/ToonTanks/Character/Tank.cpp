@@ -11,6 +11,7 @@
 
 #include "../TTGameplayTags.h"
 #include "../Attributes/AttributesComponent.h"
+#include "../SkillSpawner.h"
 
 ATank::ATank()
 	: TurnRate(200.f)
@@ -46,12 +47,13 @@ void ATank::HandleDestruction()
 	SetActorTickEnabled(false);
 }
 
-void ATank::SetSkillClass(TSubclassOf<class ASkill> SkillClass)
+void ATank::SetSkillClass(TSubclassOf<class ASkill> SkillClass, TSubclassOf<class ASkillSpawner> SkillSpawner)
 {
 	SkillData.SkillClass = SkillClass;
+	SkillData.SkillSpawner = SkillSpawner;
 }
 
-void ATank::SetSkill(FGameplayTag SkillType, float Duration, FGuid Id)
+void ATank::SetSkill(FGameplayTag SkillType, FGameplayTag SkillNature, float Duration, FGuid Id)
 {
 	// override skill if it's different from current skill
 	if (SkillData.SkillType.IsValid() && !SkillData.SkillType.MatchesTagExact(SkillType))
@@ -60,6 +62,7 @@ void ATank::SetSkill(FGameplayTag SkillType, float Duration, FGuid Id)
 	}
 
 	SkillData.SkillType = SkillType;
+	SkillData.SkillNature = SkillNature;
 	SkillData.PassiveId = Id;
 	SkillData.Duration = Duration;
 	if (SkillType.MatchesTagExact(TTGameplayTags::Skill_Laser))
@@ -70,7 +73,8 @@ void ATank::SetSkill(FGameplayTag SkillType, float Duration, FGuid Id)
 	}
 	else if (SkillType.MatchesTagExact(TTGameplayTags::Skill_Acid))
 	{
-		SkillData.Damage = 100.f;
+		SkillData.bSpawnsFromProjectile = true;
+		SkillData.Damage = 10.f;
 		SkillData.Range = 200.0f;
 		SkillData.MaxUses = 5;
 	}

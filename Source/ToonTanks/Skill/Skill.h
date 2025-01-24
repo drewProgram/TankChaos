@@ -15,8 +15,8 @@
 //DECLARE_DELEGATE_OneParam(FSkillNotify, AActor*);
 
 class ATank;
-class UCapsuleComponent;
 class UDamageHandlerComponent;
+class UShapeComponent;
 
 DECLARE_MULTICAST_DELEGATE(FOnSkillStartedDelegate)
 DECLARE_MULTICAST_DELEGATE(FOnSkillCastingDelegate)
@@ -31,6 +31,9 @@ struct FSkillData
 
 	UPROPERTY(EditAnywhere)
 	FGameplayTag SkillType;
+
+	UPROPERTY(EditAnywhere)
+	FGameplayTag SkillNature;
 
 	UPROPERTY(EditAnywhere)
 	FString Name;
@@ -50,8 +53,14 @@ struct FSkillData
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float Duration;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	bool bSpawnsFromProjectile;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<ASkill> SkillClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<class ASkillSpawner> SkillSpawner;
 
 	FOnSkillStartedDelegate OnSkillStarted;
 	FOnSkillCastingDelegate OnSkillCasting;
@@ -98,17 +107,16 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat")
+	UShapeComponent* SkillCollider;
+
 	UPROPERTY(VisibleAnywhere)
 	class UDamageHandlerComponent* DamageHandlerComponent;
 
-private:
 	bool bTimerSet;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Visual", meta = (AllowPrivateAccess = "true"))
 	UNiagaraComponent* SkillParticle;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	UCapsuleComponent* CapsuleCollider;
 
 	UFUNCTION(BlueprintCallable)
 	void SetDestroyTimer();

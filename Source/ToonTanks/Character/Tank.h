@@ -42,9 +42,9 @@ public:
 	void SetBPSkill(FGameplayTag SkillType);
 
 	UFUNCTION(BlueprintCallable)
-	void SetSkillClass(TSubclassOf<class ASkill> SkillClass);
+	void SetSkillClass(TSubclassOf<class ASkill> SkillClass, TSubclassOf<class ASkillSpawner> SkillSpawner);
 
-	void SetSkill(FGameplayTag SkillType, float Duration, FGuid Id);
+	void SetSkill(FGameplayTag SkillType, FGameplayTag SkillNature, float Duration, FGuid Id);
 	void SetSkillData(FSkillData Data);
 
 	FVector GetTurretLookDirection();
