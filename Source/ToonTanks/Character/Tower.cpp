@@ -3,12 +3,13 @@
 #include "../Attributes/AttributesComponent.h"
 #include "../Attributes/Passives.h"
 #include "../TTGameplayTags.h"
+#include "../Core/ToonTanksGameMode.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 
 ATower::ATower()
-	: FireRange(600.f), bCanShoot(true)
+	: FireRange(600.f), bCanShoot(false)
 {
 	Bory = 0;
 }
@@ -16,6 +17,19 @@ ATower::ATower()
 void ATower::BeginPlay()
 {
 	Super::BeginPlay();
+
+	bCanShoot = false;
+
+	AToonTanksGameMode* GameMode = Cast<AToonTanksGameMode>(UGameplayStatics::GetGameMode(this));
+	if (GameMode)
+	{
+		GameMode->OnCountdownEnded.AddUObject(this, &ATower::EnableShooting);
+
+		if (GameMode->GetCurrentWave() > 1)
+		{
+			bCanShoot = true;
+		}
+	}
 
 	Tank = Cast<ATank>(UGameplayStatics::GetPlayerPawn(this, 0));
 
@@ -80,6 +94,12 @@ void ATower::RemoveCooldown()
 	}
 	bCanShoot = true;
 	UE_LOG(LogTemp, Warning, TEXT("Posso atirar de novo"));
+}
+
+void ATower::EnableShooting()
+{
+	UE_LOG(LogTemp, Warning, TEXT("%s can shoot"), *GetActorNameOrLabel());
+	bCanShoot = true;
 }
 
 bool ATower::CheckTankIsInRange()

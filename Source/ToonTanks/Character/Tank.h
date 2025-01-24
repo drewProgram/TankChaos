@@ -11,11 +11,6 @@
 
 #include "Tank.generated.h"
 
-class USpringArmComponent;
-class UCameraComponent;
-class UInputMappingContext;
-class UInputAction;
-struct FInputActionValue;
 class ULegacyCameraShake;
 
 // ClientStartCameraShake
@@ -33,13 +28,12 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
-
 	virtual void HandleDestruction() override;
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void SetBPSkill(FGameplayTag SkillType);
+
+	FVector GetTurretLookDirection();
 
 	UFUNCTION(BlueprintCallable)
 	void SetSkillClass(TSubclassOf<class ASkill> SkillClass, TSubclassOf<class ASkillSpawner> SkillSpawner);
@@ -47,48 +41,16 @@ public:
 	void SetSkill(FGameplayTag SkillType, FGameplayTag SkillNature, float Duration, FGuid Id);
 	void SetSkillData(FSkillData Data);
 
-	FVector GetTurretLookDirection();
-
 	UPROPERTY(VisibleAnywhere)
 	FGameplayTagContainer TagContainer;
 
 protected:
 	virtual void BeginPlay() override;
 
-	void Move(const FInputActionValue& Value);
-
-	void TurnTurret(const FInputActionValue& Value);
-	void TurnTank(const FInputActionValue& Value);
-
 	void ShootSpecial();
 
 	UPROPERTY(EditAnywhere)
 	float TurnRate;
-
-
-private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	USpringArmComponent* CameraBoom;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* CameraComponent;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputMappingContext* DefaultMappingContext;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* MoveAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* TurnTurretAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* TurnTankAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* ShootAction;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* ShootSpecialAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	FSkillData SkillData;

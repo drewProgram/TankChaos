@@ -39,7 +39,6 @@ bool UDamageHandlerComponent::TryDamage(AActor* ActorToDamage, float Damage)
 	AController* MyOwnerInstigator = GetOwner()->GetInstigatorController();
 	UClass* DamageTypeClass = UDamageType::StaticClass();
 
-	UE_LOG(LogTemp, Display, TEXT("Damaging actor with skill!"));
 
 	UGameplayStatics::ApplyDamage(ActorToDamage, Damage, MyOwnerInstigator, GetOwner(), DamageTypeClass);
 
@@ -55,6 +54,5 @@ bool UDamageHandlerComponent::TryDamage(AActor* ActorToDamage, float Damage)
 
 void UDamageHandlerComponent::RemoveCooldownActor(AActor* Actor)
 {
-	UE_LOG(LogTemp, Display, TEXT("Removing cooldown from actor!"));
 	CooldownActors.Remove(Actor);
 }

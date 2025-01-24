@@ -4,6 +4,7 @@
 
 #include "../Character/Tank.h"
 #include "../Character/Tower.h"
+#include "../Character/TankPlayer.h"
 #include "../Character/ToonTanksPlayerController.h"
 
 AToonTanksGameMode::AToonTanksGameMode()
@@ -21,9 +22,9 @@ void AToonTanksGameMode::BeginPlay()
 
 void AToonTanksGameMode::ActorDied(AActor* DeadActor)
 {
-	if (DeadActor == Tank)
+	if (ATankPlayer* Actor = Cast<ATankPlayer>(DeadActor))
 	{
-		Tank->HandleDestruction();
+		TankPlayer->HandleDestruction();
 		if (PlayerController)
 		{
 			PlayerController->SetPlayerEnabledState(false);
@@ -39,14 +40,20 @@ void AToonTanksGameMode::ActorDied(AActor* DeadActor)
 		{
 			HandleWaveChange();
 		}
+
+		return;
 	}
+
+	ATank* Boss = Cast<ATank>(DeadActor);
+	Boss->HandleDestruction();
+	HandleWaveChange();
 }
 
 
 void AToonTanksGameMode::HandleGameStart()
 {
 	TargetTowers = GetTargetTowerCount();
-	Tank = Cast<ATank>(UGameplayStatics::GetPlayerPawn(this, 0));
+	TankPlayer = Cast<ATankPlayer>(UGameplayStatics::GetPlayerPawn(this, 0));
 	PlayerController = Cast<AToonTanksPlayerController>(UGameplayStatics::GetPlayerController(this, 0));
 
 	StartGame();
@@ -54,11 +61,10 @@ void AToonTanksGameMode::HandleGameStart()
 	if (PlayerController)
 	{
 		PlayerController->SetPlayerEnabledState(false);
-
 		FTimerHandle TimerHandle;
 		FTimerDelegate TimerDelegate = FTimerDelegate::CreateUObject(
-			PlayerController,
-			&AToonTanksPlayerController::SetPlayerEnabledState,
+			this,
+			&AToonTanksGameMode::HandleCountdownEnd,
 			true
 		);
 		GetWorldTimerManager().SetTimer(
@@ -67,9 +73,7 @@ void AToonTanksGameMode::HandleGameStart()
 			StartDelay,
 			false
 		);
-
 	}
-
 }
 
 void AToonTanksGameMode::HandleWaveChange()
@@ -79,7 +83,8 @@ void AToonTanksGameMode::HandleWaveChange()
 	switch (CurrentWave)
 	{
 	case 2:
-	case 3:
+	//case 3:
+	//case 4:
 		UE_LOG(LogTemp, Display, TEXT("New wave appearing"));
 		EnemyHealthBonus += 10.f;
 		EnemyDamageBonus += 5.f;
@@ -88,12 +93,33 @@ void AToonTanksGameMode::HandleWaveChange()
 
 		break;
 
+	case 3:
+		UE_LOG(LogTemp, Warning, TEXT("WARNING: BOSS ROUND"));
+
+		TotalEnemies = 6;
+		TargetTowers = 5;
+
+		EnemyDamageBonus += 5.f;
+		EnemyHealthBonus += 5.f;
+
+		break;
 	default:
 		GameOver(true);
-		break;
+
+		return;
 	}
 
 	OnWaveStarted.ExecuteIfBound();
+}
+
+void AToonTanksGameMode::HandleCountdownEnd(bool bPlayerEnabled)
+{
+	PlayerController = Cast<AToonTanksPlayerController>(UGameplayStatics::GetPlayerController(this, 0));
+	if (PlayerController)
+	{
+		PlayerController->SetPlayerEnabledState(bPlayerEnabled);
+	}
+	OnCountdownEnded.Broadcast();
 }
 
 int32 AToonTanksGameMode::GetTargetTowerCount()
@@ -117,4 +143,9 @@ float AToonTanksGameMode::GetEnemyHealthBonus()
 float AToonTanksGameMode::GetEnemyDamageBonus()
 {
 	return EnemyDamageBonus;
+}
+
+int32 AToonTanksGameMode::GetCurrentWave()
+{
+	return CurrentWave;
 }

@@ -5,6 +5,7 @@
 
 #include "ToonTanksGameMode.h"
 #include "../Character/BasePawn.h"
+#include "../Character/Tank.h"
 
 // Sets default values
 AEnemySpawner::AEnemySpawner()
@@ -28,11 +29,40 @@ void AEnemySpawner::BeginPlay()
 	SpawnEnemies();
 }
 
+void AEnemySpawner::RandomizeAndSpawn(UNavigationSystemV1* NavSystem, FVector OriginLocation)
+{
+	FNavLocation ResultLocation;
+	NavSystem->GetRandomReachablePointInRadius(OriginLocation, 5000.f, ResultLocation);
+
+	FVector Location = FVector(ResultLocation.Location.X, ResultLocation.Location.Y, 85.f);
+	FRotator Rotation = FRotator::ZeroRotator;
+
+	ABasePawn* Enemy = GetWorld()->SpawnActor<ABasePawn>(EnemyClass, Location, Rotation);
+	if (Enemy == nullptr)
+	{
+		UE_LOG(LogTemp, Display, TEXT("Skill ended"));
+		NavSystem->GetRandomReachablePointInRadius(OriginLocation, 5000.f, ResultLocation);
+		Enemy = GetWorld()->SpawnActor<ABasePawn>(EnemyClass, Location, Rotation);
+	}
+}
+
+void AEnemySpawner::SpawnBoss()
+{
+	UE_LOG(LogTemp, Display, TEXT("Trying to spawn boss"));
+	FVector SpawnLocation = FVector(460.0, -550.0, 100);
+	FRotator Rotation = FRotator::ZeroRotator;
+
+	ATank* Enemy = GetWorld()->SpawnActor<ATank>(BossClass, SpawnLocation, Rotation);
+	if (Enemy == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Could not spawn boss"));
+	}
+}
+
 // Called every frame
 void AEnemySpawner::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void AEnemySpawner::SpawnEnemies()
@@ -40,19 +70,18 @@ void AEnemySpawner::SpawnEnemies()
 	AToonTanksGameMode* GameMode = Cast<AToonTanksGameMode>(UGameplayStatics::GetGameMode(this));
 	if (GameMode)
 	{
-		
 		int32 TotalEnemies = GameMode->GetTotalEnemies();
 		FVector OriginLocation = GetActorLocation();
 		UNavigationSystemV1* NavSystem = Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem());
 		for (int i = 1; i <= TotalEnemies; i++)
 		{
-			FNavLocation ResultLocation;
-			NavSystem->GetRandomReachablePointInRadius(OriginLocation, 5000.f, ResultLocation);
+			if (GameMode->GetCurrentWave() == 3 && i == 6)
+			{
+				SpawnBoss();
+				return;
+			}
 
-			FVector Location = FVector(ResultLocation.Location.X, ResultLocation.Location.Y, 85.f);
-			FRotator Rotation = FRotator::ZeroRotator;
-
-			ABasePawn* Enemy = GetWorld()->SpawnActor<ABasePawn>(EnemyClass, Location, Rotation);
+			RandomizeAndSpawn(NavSystem, OriginLocation);
 		}
 	}
 }

@@ -7,6 +7,7 @@
 #include "ToonTanksGameMode.generated.h"
 
 DECLARE_DELEGATE(FOnWaveStartedDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnCountdownEnded);
 
 /**
  * 
@@ -29,11 +30,14 @@ public:
 	float GetEnemyHealthBonus();
 	float GetEnemyDamageBonus();
 
+	int32 GetCurrentWave();
+
 	FOnWaveStartedDelegate OnWaveStarted;
+	FOnCountdownEnded OnCountdownEnded;
 	
 protected:
 	virtual void BeginPlay() override;
-
+	
 	UFUNCTION(BlueprintImplementableEvent)
 	void StartGame();
 
@@ -42,7 +46,7 @@ protected:
 
 
 private:
-	class ATank* Tank;
+	class ATankPlayer* TankPlayer;
 	class AToonTanksPlayerController* PlayerController;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -62,5 +66,6 @@ private:
 
 	void HandleWaveChange();
 
-	void SpawnNewEnemies();
+	UFUNCTION()
+	void HandleCountdownEnd(bool bPlayerEnabled);
 };

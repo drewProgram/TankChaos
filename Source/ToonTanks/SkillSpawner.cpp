@@ -35,13 +35,10 @@ void ASkillSpawner::BeginPlay()
 
 void ASkillSpawner::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	UE_LOG(LogTemp, Display, TEXT("Bateu"));
-
 	UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
 
 	if (SkillData.SkillClass)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Existe skill class"));
 		SkillData.SkillNature = TTGameplayTags::SkillNature_Ground;
 
 		SkillData.RequestCastSkill(Hit.ImpactPoint, GetWorld(), GetActorRotation());

@@ -25,4 +25,12 @@ protected:
 	
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ABasePawn> EnemyClass;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class ATank> BossClass;
+
+	void RandomizeAndSpawn(class UNavigationSystemV1* NavSystem, FVector OriginLocation);
+
+	UFUNCTION(BlueprintCallable)
+	void SpawnBoss();
 };

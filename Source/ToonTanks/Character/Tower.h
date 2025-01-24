@@ -40,6 +40,9 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	ATank* Tank;
 
+	UFUNCTION()
+	void EnableShooting();
+
 	UPROPERTY(EditAnywhere)
 	float FireRange;
 

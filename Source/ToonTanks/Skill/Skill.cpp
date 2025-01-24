@@ -168,10 +168,9 @@ void ASkill::Tick(float DeltaTime)
 		{
 			if (OverlappedActor != SkillData.Owner)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("OverlappedActor: %s"), *OverlappedActor->GetName());
 				if (!DamageHandlerComponent->TryDamage(OverlappedActor, SkillData.Damage))
 				{
-					UE_LOG(LogTemp, Display, TEXT("Can't damage actor now!"));
+					//UE_LOG(LogTemp, Display, TEXT("Can't damage actor now!"));
 				}
 			}
 		}
@@ -181,7 +180,7 @@ void ASkill::Tick(float DeltaTime)
 void ASkill::SetDestroyTimer()
 {
 	FTimerHandle TimerHandle;
-	UE_LOG(LogTemp, Display, TEXT("Timer set to %f seconds"), SkillData.Duration);
+	//UE_LOG(LogTemp, Display, TEXT("Timer set to %f seconds"), SkillData.Duration);
 	GetWorld()->GetTimerManager().SetTimer(
 		TimerHandle,
 		this,
