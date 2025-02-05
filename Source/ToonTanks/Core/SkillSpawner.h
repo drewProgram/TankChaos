@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 
-#include "Skill/Skill.h"
+#include "../Skill/Skill.h"
 
 #include "SkillSpawner.generated.h"
 

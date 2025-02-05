@@ -1,6 +1,6 @@
 #include "PowerUp.h"
 
-#include "../Character/Tank.h"
+#include "../Character/TankPlayer.h"
 
 // Sets default values
 APowerUp::APowerUp()
@@ -24,7 +24,7 @@ void APowerUp::BeginPlay()
 void APowerUp::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (bAlreadySet) return;
-	ATank* Player = Cast<ATank>(OtherActor);
+	ATankPlayer* Player = Cast<ATankPlayer>(OtherActor);
 	if (Player)
 	{
 		if (Passive.PassiveType != FGameplayTag::EmptyTag)

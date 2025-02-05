@@ -98,3 +98,8 @@ UStaticMeshComponent* ABasePawn::GetTurretMeshComponent()
 {
 	return TurretMesh;
 }
+
+void ABasePawn::SetTurretRotation(FRotator Rotator)
+{
+	TurretMesh->SetWorldRotation(Rotator);
+}

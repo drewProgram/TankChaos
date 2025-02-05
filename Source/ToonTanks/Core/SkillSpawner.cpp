@@ -4,7 +4,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
-#include "TTGameplayTags.h"
+#include "../TTGameplayTags.h"
 
 // Sets default values
 ASkillSpawner::ASkillSpawner()

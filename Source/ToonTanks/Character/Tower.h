@@ -25,12 +25,12 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 	void RemoveCooldown();
+	
+	UFUNCTION()
+	void Turn(FVector Target);
 
 protected:
 	virtual void BeginPlay() override;
-
-	UFUNCTION()
-	void Turn(FVector Target);
 
 	UFUNCTION()
 	void HandleStatusApplied(FGameplayTag StatusTag, float Duration);

@@ -10,7 +10,7 @@
 #include "../Character/Tower.h"
 #include "../Core/DamageHandlerComponent.h"
 #include "../TTGameplayTags.h"
-#include "../SkillSpawner.h"
+#include "../Core/SkillSpawner.h"
 #include "../Attributes/AttributesComponent.h"
 
 // Collision channel for skills: ECC_GameTraceChannel1

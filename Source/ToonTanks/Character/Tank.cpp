@@ -6,7 +6,7 @@
 
 #include "../TTGameplayTags.h"
 #include "../Attributes/AttributesComponent.h"
-#include "../SkillSpawner.h"
+#include "../Core/SkillSpawner.h"
 
 ATank::ATank()
 	: TurnRate(200.f)

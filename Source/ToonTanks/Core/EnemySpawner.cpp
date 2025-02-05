@@ -75,7 +75,7 @@ void AEnemySpawner::SpawnEnemies()
 		UNavigationSystemV1* NavSystem = Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem());
 		for (int i = 1; i <= TotalEnemies; i++)
 		{
-			if (GameMode->GetCurrentWave() == 3 && i == 6)
+			if (GameMode->GetCurrentWave() == 2 && i == 6)
 			{
 				SpawnBoss();
 				return;
