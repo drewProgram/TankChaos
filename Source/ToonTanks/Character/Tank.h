@@ -41,6 +41,8 @@ public:
 	void SetSkill(FGameplayTag SkillType, FGameplayTag SkillNature, float Duration, FGuid Id);
 	void SetSkillData(FSkillData Data);
 
+	void RequestSkillCast();
+
 	UPROPERTY(VisibleAnywhere)
 	FGameplayTagContainer TagContainer;
 

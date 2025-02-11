@@ -24,9 +24,32 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
+	FVector GetRandomLocation();
+
+	void RequestShoot();
+	void RemoveCooldown();
+
 protected:
+	virtual void BeginPlay() override;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
 	UBehaviorTree* Tree;
 
+	class ABaseAIController* AIController;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	class UFloatingPawnMovement* MovementComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float SearchRadius;
+
+	UPROPERTY(BlueprintReadWrite ,Category = "Movement")
+	FVector LocationToMove;
+
+	FTimerHandle FireRateTimerHandle;
+
+	UPROPERTY(VisibleAnywhere)
+	bool bCanShoot;
+
+	void FindRandomLocation();
 };

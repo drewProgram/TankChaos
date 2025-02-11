@@ -16,7 +16,11 @@ class TOONTANKS_API ABaseAIController : public AAIController
 	
 public:
 	explicit ABaseAIController(FObjectInitializer const& ObjectInitializer);
+	
+	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
 
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
+
+
 };

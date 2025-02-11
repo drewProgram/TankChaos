@@ -73,6 +73,12 @@ void ATank::SetSkillData(FSkillData Data)
 	SkillData = Data;
 }
 
+void ATank::RequestSkillCast()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Trying to cast skill"));
+	ShootSpecial();
+}
+
 FVector ATank::GetTurretLookDirection()
 {
 	return TurretMesh->GetForwardVector();
