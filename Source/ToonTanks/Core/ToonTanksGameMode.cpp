@@ -6,6 +6,7 @@
 #include "../Character/Tower.h"
 #include "../Character/TankPlayer.h"
 #include "../Character/ToonTanksPlayerController.h"
+#include "../Attributes/AttributesComponent.h"
 
 AToonTanksGameMode::AToonTanksGameMode()
 	: StartDelay(3.f), TargetTowers(0), CurrentWave(1), TotalEnemies(5)
@@ -73,6 +74,7 @@ void AToonTanksGameMode::HandleGameStart()
 			StartDelay,
 			false
 		);
+		
 	}
 }
 
@@ -120,6 +122,7 @@ void AToonTanksGameMode::HandleCountdownEnd(bool bPlayerEnabled)
 		PlayerController->SetPlayerEnabledState(bPlayerEnabled);
 	}
 	OnCountdownEnded.Broadcast();
+	TankPlayer->GetAttributesComponent()->OnHealthUpdated.Broadcast();
 }
 
 int32 AToonTanksGameMode::GetTargetTowerCount()

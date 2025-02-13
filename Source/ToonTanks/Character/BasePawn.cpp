@@ -84,7 +84,7 @@ void ABasePawn::HandleDestruction()
 	}
 }
 
-UAttributesComponent* ABasePawn::GetAttributesComponent()
+UAttributesComponent* ABasePawn::GetAttributesComponent() const
 {
 	return AttributesComponent;
 }

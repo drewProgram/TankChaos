@@ -12,6 +12,8 @@ ATank::ATank()
 	: TurnRate(200.f)
 {
 	SkillData.Owner = this;
+	
+	SkillDataObj = NewObject<USkillDataObject>();
 }
 
 void ATank::Tick(float DeltaTime)
@@ -31,6 +33,11 @@ void ATank::HandleDestruction()
 
 	SetActorHiddenInGame(true);
 	SetActorTickEnabled(false);
+}
+
+USkillDataObject* const ATank::GetSkillDataObject()
+{
+	return &SkillDataObj;
 }
 
 void ATank::SetSkillClass(TSubclassOf<class ASkill> SkillClass, TSubclassOf<class ASkillSpawner> SkillSpawner)
@@ -66,6 +73,8 @@ void ATank::SetSkill(FGameplayTag SkillType, FGameplayTag SkillNature, float Dur
 	}
 	SkillData.UpdateSkillCount();
 	SetBPSkill(SkillType);
+
+	OnActorGotSkill.Broadcast();
 }
 
 void ATank::SetSkillData(FSkillData Data)
@@ -82,6 +91,11 @@ void ATank::RequestSkillCast()
 FVector ATank::GetTurretLookDirection()
 {
 	return TurretMesh->GetForwardVector();
+}
+
+ATank::GetSkillData() const
+{
+	return SkillData;
 }
 
 void ATank::BeginPlay()

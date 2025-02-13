@@ -13,6 +13,7 @@
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStatusAppliedDelegate, FGameplayTag, float);
 DECLARE_MULTICAST_DELEGATE(FOnStatusRemovedDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnActorTookDamageDelegate);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class TOONTANKS_API UAttributesComponent : public UActorComponent
@@ -28,6 +29,9 @@ public:
 	FOnStatusAppliedDelegate OnStatusApplied;
 	FOnStatusRemovedDelegate OnStatusRemoved;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnActorTookDamageDelegate OnHealthUpdated;
+
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	/* Getters and Setters for Attributes and Modifiers
@@ -35,7 +39,10 @@ public:
 	*/
 
 	UFUNCTION(BlueprintCallable)
-	int32 GetHealth();
+	int32 GetHealth() const;
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetMaxHealth() const;
 
 	UFUNCTION(BlueprintCallable)
 	void UpdateHealthModifier();
@@ -79,7 +86,10 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Base Attributes")
 	int32 BaseHealth;
 
-	UPROPERTY(VisibleAnywhere, Category = "Attributes")
+	UPROPERTY(VisibleAnywhere, BlueprintGetter = GetMaxHealth, Category = "Base Attributes")
+	int32 MaxHealth;
+
+	UPROPERTY(VisibleAnywhere, BlueprintGetter = GetHealth ,Category = "Attributes")
 	int32 Health;
 	float HealthModifier;
 

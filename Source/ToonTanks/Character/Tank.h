@@ -15,6 +15,8 @@ class ULegacyCameraShake;
 
 // ClientStartCameraShake
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnActorGotSkillDelegate);
+
 /**
  * 
  */
@@ -28,12 +30,20 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
+	FOnActorGotSkillDelegate OnActorGotSkill;
+
 	virtual void HandleDestruction() override;
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void SetBPSkill(FGameplayTag SkillType);
 
 	FVector GetTurretLookDirection();
+
+	UFUNCTION(BlueprintPure)
+	const FSkillData& GetSkillData() const;
+
+	UFUNCTION(BlueprintCallable)
+	USkillDataObject* const GetSkillDataObject();
 
 	UFUNCTION(BlueprintCallable)
 	void SetSkillClass(TSubclassOf<class ASkill> SkillClass, TSubclassOf<class ASkillSpawner> SkillSpawner);
@@ -54,6 +64,8 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float TurnRate;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	USkillDataObject* SkillDataObj;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintGetter=GetSkillData, meta = (AllowPrivateAccess = "true"))
 	FSkillData SkillData;
 };

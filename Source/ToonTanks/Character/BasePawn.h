@@ -33,13 +33,16 @@ public:
 	virtual void HandleDestruction();
 
 	UFUNCTION(BlueprintCallable)
-	UAttributesComponent* GetAttributesComponent();
+	UAttributesComponent* GetAttributesComponent() const;
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void SetBuggedVFX();
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void SetChilledVFX();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void RemoveVFX();
 
 	UFUNCTION(BlueprintCallable)
 	USceneComponent* GetProjectileSpawnPoint();
@@ -70,7 +73,7 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float MoveSpeed;
 
-	UPROPERTY(VisibleAnywhere, Category = "Combat")
+	UPROPERTY(VisibleAnywhere, BlueprintGetter=GetAttributesComponent, Category = "Combat")
 	UAttributesComponent* AttributesComponent;
 
 private:

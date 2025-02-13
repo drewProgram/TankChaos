@@ -11,6 +11,8 @@ public class ToonTanks : ModuleRules
 		PublicDependencyModuleNames.AddRange(new string[]
 		{
 			"Core",
+			"UMG",
+			"Slate",
 			"CoreUObject",
 			"Engine",
 			"InputCore",

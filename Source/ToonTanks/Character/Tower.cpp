@@ -60,6 +60,7 @@ void ATower::HandleDestruction()
 {
 	Super::HandleDestruction();
 
+	RemoveVFX();
 	Destroy();
 }
 
@@ -83,6 +84,7 @@ void ATower::HandleStatusRemoved()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Back to normal"));
 	RemoveCooldown();
+	RemoveVFX();
 }
 
 void ATower::RemoveCooldown()

@@ -13,6 +13,7 @@
 // Sets default values for this component's properties
 UAttributesComponent::UAttributesComponent()
 	: BaseHealth(200),
+	MaxHealth(0),
 	DamageModifier(0),
 	Health(0),
 	FireRate(0),
@@ -37,7 +38,8 @@ void UAttributesComponent::BeginPlay()
 	// Can change the modifiers
 	InitPassives();
 
-	Health = BaseHealth + (BaseHealth * HealthModifier);
+	MaxHealth = BaseHealth + (BaseHealth * HealthModifier);
+	Health = MaxHealth;
 	MovementSpeed = BaseMovementSpeed + (BaseMovementSpeed * MovementSpeedModifier);
 	FireRate = BaseFireRate + (BaseFireRate * FireRateModifier);
 }
@@ -108,6 +110,9 @@ void UAttributesComponent::DamageTaken(AActor* DamagedActor, float Damage, const
 				}
 			}
 		}
+
+		OnHealthUpdated.Broadcast();
+
 		if (Health <= 0)
 		{
 			AToonTanksGameMode* GameMode = Cast<AToonTanksGameMode>(UGameplayStatics::GetGameMode(this));
@@ -127,15 +132,22 @@ void UAttributesComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 
 }
 
-int32 UAttributesComponent::GetHealth()
+int32 UAttributesComponent::GetHealth() const
 {
 	return Health;
+}
+
+int32 UAttributesComponent::GetMaxHealth() const
+{
+	return MaxHealth;
 }
 
 void UAttributesComponent::UpdateHealthModifier()
 {
 	HealthModifier = HealthStack.GetTotalModifier() / 100;
-	Health = BaseHealth + (BaseHealth * HealthModifier);
+	MaxHealth = BaseHealth + (BaseHealth * HealthModifier);
+	Health = MaxHealth;
+	OnHealthUpdated.Broadcast();
 }
 
 float UAttributesComponent::GetFireRate()

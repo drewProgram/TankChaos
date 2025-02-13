@@ -75,6 +75,8 @@ bool FSkillData::RequestCastSkill(FVector SpawnLocation, UWorld* WorldRef, FRota
 
 			UsesLeft -= 1;
 
+			OnSkillStarted.Broadcast();
+
 			return true;
 		}
 		else
@@ -97,6 +99,7 @@ bool FSkillData::RequestCastSkill(FVector SpawnLocation, UWorld* WorldRef, FRota
 		);
 
 		UsesLeft -= 1;
+		OnSkillStarted.Broadcast();
 
 		return true;
 	}
@@ -118,6 +121,7 @@ void FSkillData::NotifySkillEnded()
 	}
 
 	HasSkillEnded = true;
+	OnSkillEnded.Broadcast();
 }
 
 void FSkillData::UpdateSkillCount()

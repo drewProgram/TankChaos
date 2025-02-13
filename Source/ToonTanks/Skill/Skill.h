@@ -18,9 +18,9 @@ class ATank;
 class UDamageHandlerComponent;
 class UShapeComponent;
 
-DECLARE_MULTICAST_DELEGATE(FOnSkillStartedDelegate)
-DECLARE_MULTICAST_DELEGATE(FOnSkillCastingDelegate)
-DECLARE_MULTICAST_DELEGATE(FOnSkillEndedDelegate)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSkillStartedDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSkillCastingDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSkillEndedDelegate);
 
 USTRUCT(BlueprintType)
 struct FSkillData
@@ -29,7 +29,7 @@ struct FSkillData
 
 	FSkillData();
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FGameplayTag SkillType;
 
 	UPROPERTY(EditAnywhere)
@@ -62,8 +62,13 @@ struct FSkillData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class ASkillSpawner> SkillSpawner;
 
+	UPROPERTY(BlueprintAssignable)
 	FOnSkillStartedDelegate OnSkillStarted;
+	
+	UPROPERTY(BlueprintAssignable)
 	FOnSkillCastingDelegate OnSkillCasting;
+
+	UPROPERTY(BlueprintAssignable)
 	FOnSkillEndedDelegate OnSkillEnded;
 
 	UPROPERTY(BlueprintReadOnly)
@@ -80,7 +85,7 @@ struct FSkillData
 	void UpdateSkillCount();
 
 private:
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	int32 UsesLeft;
 };
 
