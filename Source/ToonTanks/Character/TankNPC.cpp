@@ -51,9 +51,9 @@ void ATankNPC::BeginPlay()
 
 	SetSkill(TTGameplayTags::Skill_Laser, TTGameplayTags::SkillNature_Beam, 5.f, FGuid::NewGuid());
 	
-	SkillData.MaxUses = 10;
-	SkillData.UpdateSkillCount();
-	SkillData.Damage = 1.f;
+	SkillDataObj->SkillData.MaxUses = 10;
+	SkillDataObj->SkillData.UpdateSkillCount();
+	SkillDataObj->SkillData.Damage = 1.f;
 
 	bCanShoot = true;
 }

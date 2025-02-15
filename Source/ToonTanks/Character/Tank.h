@@ -8,6 +8,7 @@
 #include "GameplayTagContainer.h"
 
 #include "../Skill/Skill.h"
+#include "../Skill/SkillDataObject.h"
 
 #include "Tank.generated.h"
 
@@ -40,10 +41,7 @@ public:
 	FVector GetTurretLookDirection();
 
 	UFUNCTION(BlueprintPure)
-	const FSkillData& GetSkillData() const;
-
-	UFUNCTION(BlueprintCallable)
-	USkillDataObject* const GetSkillDataObject();
+	USkillDataObject* GetSkillDataObject() const;
 
 	UFUNCTION(BlueprintCallable)
 	void SetSkillClass(TSubclassOf<class ASkill> SkillClass, TSubclassOf<class ASkillSpawner> SkillSpawner);
@@ -64,8 +62,6 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float TurnRate;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintGetter = GetSkillDataObject, meta = (AllowPrivateAccess = "true"))
 	USkillDataObject* SkillDataObj;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintGetter=GetSkillData, meta = (AllowPrivateAccess = "true"))
-	FSkillData SkillData;
 };

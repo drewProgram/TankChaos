@@ -11,9 +11,8 @@
 ATank::ATank()
 	: TurnRate(200.f)
 {
-	SkillData.Owner = this;
-	
-	SkillDataObj = NewObject<USkillDataObject>();
+	SkillDataObj = CreateDefaultSubobject<USkillDataObject>(TEXT("SkillDataObject"));
+	SkillDataObj->SkillData.Owner = this;
 }
 
 void ATank::Tick(float DeltaTime)
@@ -35,43 +34,43 @@ void ATank::HandleDestruction()
 	SetActorTickEnabled(false);
 }
 
-USkillDataObject* const ATank::GetSkillDataObject()
+USkillDataObject* ATank::GetSkillDataObject() const
 {
-	return &SkillDataObj;
+	return SkillDataObj;
 }
 
 void ATank::SetSkillClass(TSubclassOf<class ASkill> SkillClass, TSubclassOf<class ASkillSpawner> SkillSpawner)
 {
-	SkillData.SkillClass = SkillClass;
-	SkillData.SkillSpawner = SkillSpawner;
+	SkillDataObj->SkillData.SkillClass = SkillClass;
+	SkillDataObj->SkillData.SkillSpawner = SkillSpawner;
 }
 
 void ATank::SetSkill(FGameplayTag SkillType, FGameplayTag SkillNature, float Duration, FGuid Id)
 {
 	// override skill if it's different from current skill
-	if (SkillData.SkillType.IsValid() && !SkillData.SkillType.MatchesTagExact(SkillType))
+	if (SkillDataObj->SkillData.SkillType.IsValid() && !SkillDataObj->SkillData.SkillType.MatchesTagExact(SkillType))
 	{
-		AttributesComponent->RemovePassive(SkillData.PassiveId);
+		AttributesComponent->RemovePassive(SkillDataObj->SkillData.PassiveId);
 	}
 
-	SkillData.SkillType = SkillType;
-	SkillData.SkillNature = SkillNature;
-	SkillData.PassiveId = Id;
-	SkillData.Duration = Duration;
+	SkillDataObj->SkillData.SkillType = SkillType;
+	SkillDataObj->SkillData.SkillNature = SkillNature;
+	SkillDataObj->SkillData.PassiveId = Id;
+	SkillDataObj->SkillData.Duration = Duration;
 	if (SkillType.MatchesTagExact(TTGameplayTags::Skill_Laser))
 	{
-		SkillData.Damage = 5.f;
-		SkillData.Range = 1000.0f;
-		SkillData.MaxUses = 5;
+		SkillDataObj->SkillData.Damage = 5.f;
+		SkillDataObj->SkillData.Range = 1000.0f;
+		SkillDataObj->SkillData.MaxUses = 5;
 	}
 	else if (SkillType.MatchesTagExact(TTGameplayTags::Skill_Acid))
 	{
-		SkillData.bSpawnsFromProjectile = true;
-		SkillData.Damage = 10.f;
-		SkillData.Range = 200.0f;
-		SkillData.MaxUses = 5;
+		SkillDataObj->SkillData.bSpawnsFromProjectile = true;
+		SkillDataObj->SkillData.Damage = 10.f;
+		SkillDataObj->SkillData.Range = 200.0f;
+		SkillDataObj->SkillData.MaxUses = 5;
 	}
-	SkillData.UpdateSkillCount();
+	SkillDataObj->SkillData.UpdateSkillCount();
 	SetBPSkill(SkillType);
 
 	OnActorGotSkill.Broadcast();
@@ -79,7 +78,7 @@ void ATank::SetSkill(FGameplayTag SkillType, FGameplayTag SkillNature, float Dur
 
 void ATank::SetSkillData(FSkillData Data)
 {
-	SkillData = Data;
+	SkillDataObj->SkillData = Data;
 }
 
 void ATank::RequestSkillCast()
@@ -93,11 +92,6 @@ FVector ATank::GetTurretLookDirection()
 	return TurretMesh->GetForwardVector();
 }
 
-ATank::GetSkillData() const
-{
-	return SkillData;
-}
-
 void ATank::BeginPlay()
 {
 	Super::BeginPlay();
@@ -105,14 +99,14 @@ void ATank::BeginPlay()
 
 void ATank::ShootSpecial()
 {
-	if (SkillData.SkillClass)
+	if (SkillDataObj->SkillData.SkillClass)
 	{
 		UE_LOG(LogTemp, Display, TEXT("Shooting special"));
-		if (SkillData.SkillType.IsValid())
+		if (SkillDataObj->SkillData.SkillType.IsValid())
 		{
 			UE_LOG(LogTemp, Display, TEXT("Skill Type valid"));
 
-			if (SkillData.GetUsesLeft() <= 0)
+			if (SkillDataObj->SkillData.GetUsesLeft() <= 0)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("0 uses left of skill"));
 				return;
@@ -132,8 +126,8 @@ void ATank::ShootSpecial()
 
 			TagContainer.AddTag(TTGameplayTags::State_StartingCastSkill);
 
-			SkillData.Owner = this;
-			if (SkillData.RequestCastSkill(ProjectileSpawnPoint->GetComponentLocation(), GetWorld(), TurretMesh->GetComponentRotation()))
+			SkillDataObj->SkillData.Owner = this;
+			if (SkillDataObj->SkillData.RequestCastSkill(ProjectileSpawnPoint->GetComponentLocation(), GetWorld(), TurretMesh->GetComponentRotation()))
 			{
 				TagContainer.RemoveTag(TTGameplayTags::State_StartingCastSkill);
 				TagContainer.AddTag(TTGameplayTags::State_CastingSkill);

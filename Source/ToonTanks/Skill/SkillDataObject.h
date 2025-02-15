@@ -9,9 +9,6 @@
 
 #include "SkillDataObject.generated.h"
 
-/**
- * 
- */
 UCLASS(BlueprintType)
 class TOONTANKS_API USkillDataObject : public UObject
 {
@@ -20,9 +17,19 @@ class TOONTANKS_API USkillDataObject : public UObject
 public:
 	USkillDataObject();
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Skills")
-	FSkillData SkillData;
+	UFUNCTION(BlueprintPure)
+	const FSkillData& GetSkillData() const;
+
+	UFUNCTION()
+	FOnSkillStartedDelegate& GetOnSkillStarted();
+
+	UFUNCTION()
+	FOnSkillEndedDelegate& GetOnSkillEnded();
 
 private:
-	FSkillData TmpSkillData;
+	friend class ATank;
+	friend class ATankNPC;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, BlueprintGetter = GetSkillData, Category = "Skills", meta = (AllowPrivateAccess="true"))
+	FSkillData SkillData;
 };

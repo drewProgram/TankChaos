@@ -5,6 +5,19 @@
 
 USkillDataObject::USkillDataObject()
 {
-	SkillData = FSkillData();
 }
 
+FOnSkillStartedDelegate& USkillDataObject::GetOnSkillStarted()
+{
+	return SkillData.OnSkillStarted;
+}
+
+FOnSkillEndedDelegate& USkillDataObject::GetOnSkillEnded()
+{
+	return SkillData.OnSkillEnded;
+}
+
+const FSkillData& USkillDataObject::GetSkillData() const
+{
+	return SkillData;
+}

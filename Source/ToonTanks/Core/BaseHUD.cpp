@@ -4,6 +4,7 @@
 
 #include "../Character/TankPlayer.h"
 #include "../Attributes/AttributesComponent.h"
+#include "../Skill/SkillDataObject.h"
 
 ABaseHUD::ABaseHUD()
 {
@@ -17,10 +18,16 @@ void ABaseHUD::BeginPlay()
 	ATankPlayer* Player = Cast<ATankPlayer>(UGameplayStatics::GetPlayerController(this, 0)->GetPawn());
 	if (Player)
 	{
-		Player->GetAttributesComponent()->OnHealthUpdated.AddDynamic(this, &ABaseHUD::HandleHealthUpdated);
-		Player->GetSkillData().OnSkillStarted.AddDynamic(this, &ABaseHUD::HandleSkillStart);
-		Player->GetSkillData().OnSkillEnded.AddDynamic(this, &ABaseHUD::HandleSkillEnd);
-		Player->OnActorGotSkill.AddDynamic(this, &ABaseHUD::HandleNewSkill);
-
+		if (Player->GetSkillDataObject())
+		{
+			Player->GetAttributesComponent()->OnHealthUpdated.AddDynamic(this, &ABaseHUD::HandleHealthUpdated);
+			Player->GetSkillDataObject()->GetOnSkillStarted().AddDynamic(this, &ABaseHUD::HandleSkillStart);
+			Player->GetSkillDataObject()->GetOnSkillEnded().AddDynamic(this, &ABaseHUD::HandleSkillEnd);
+			Player->OnActorGotSkill.AddDynamic(this, &ABaseHUD::HandleNewSkill);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("SkillDataObject nullptr"));
+		}
 	}
 }
