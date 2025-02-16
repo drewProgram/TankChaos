@@ -21,6 +21,8 @@ class UShapeComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSkillStartedDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSkillCastingDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSkillEndedDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSkillSlotRemovedDelegate);
+
 
 USTRUCT(BlueprintType)
 struct FSkillData
@@ -70,6 +72,9 @@ struct FSkillData
 
 	UPROPERTY(BlueprintAssignable)
 	FOnSkillEndedDelegate OnSkillEnded;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnSkillSlotRemovedDelegate OnSkillSlotRemoved;
 
 	UPROPERTY(BlueprintReadOnly)
 	ATank* Owner;

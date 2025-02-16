@@ -17,6 +17,11 @@ FOnSkillEndedDelegate& USkillDataObject::GetOnSkillEnded()
 	return SkillData.OnSkillEnded;
 }
 
+FOnSkillSlotRemovedDelegate& USkillDataObject::GetOnSkillSlotRemoved()
+{
+	return SkillData.OnSkillSlotRemoved;
+}
+
 const FSkillData& USkillDataObject::GetSkillData() const
 {
 	return SkillData;

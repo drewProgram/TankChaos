@@ -8,26 +8,42 @@
 
 ABaseHUD::ABaseHUD()
 {
-
+	PlayerPawn = nullptr;
 }
 
 void ABaseHUD::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ATankPlayer* Player = Cast<ATankPlayer>(UGameplayStatics::GetPlayerController(this, 0)->GetPawn());
-	if (Player)
+	PlayerPawn = Cast<ATankPlayer>(UGameplayStatics::GetPlayerController(this, 0)->GetPawn());
+	if (PlayerPawn)
 	{
-		if (Player->GetSkillDataObject())
+		if (PlayerPawn->GetSkillDataObject())
 		{
-			Player->GetAttributesComponent()->OnHealthUpdated.AddDynamic(this, &ABaseHUD::HandleHealthUpdated);
-			Player->GetSkillDataObject()->GetOnSkillStarted().AddDynamic(this, &ABaseHUD::HandleSkillStart);
-			Player->GetSkillDataObject()->GetOnSkillEnded().AddDynamic(this, &ABaseHUD::HandleSkillEnd);
-			Player->OnActorGotSkill.AddDynamic(this, &ABaseHUD::HandleNewSkill);
+			PlayerPawn->GetAttributesComponent()->OnHealthUpdated.AddDynamic(this, &ABaseHUD::HandleHealthUpdated);
+			PlayerPawn->OnActorGotSkill.AddDynamic(this, &ABaseHUD::HandleNewSkill);
 		}
 		else
 		{
 			UE_LOG(LogTemp, Error, TEXT("SkillDataObject nullptr"));
 		}
 	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("PlayerPawn is nullptr"));
+	}
+}
+
+void ABaseHUD::BindListeners()
+{
+	PlayerPawn->GetSkillDataObject()->GetOnSkillStarted().AddDynamic(this, &ABaseHUD::HandleSkillStart);
+	PlayerPawn->GetSkillDataObject()->GetOnSkillEnded().AddDynamic(this, &ABaseHUD::HandleSkillEnd);
+	PlayerPawn->GetSkillDataObject()->GetOnSkillSlotRemoved().AddDynamic(this, &ABaseHUD::HandleSkillRemoved);
+}
+
+void ABaseHUD::UnbindListeners()
+{
+	PlayerPawn->GetSkillDataObject()->GetOnSkillStarted().RemoveDynamic(this, &ABaseHUD::HandleSkillStart);
+	PlayerPawn->GetSkillDataObject()->GetOnSkillEnded().RemoveDynamic(this, &ABaseHUD::HandleSkillEnd);
+	PlayerPawn->GetSkillDataObject()->GetOnSkillSlotRemoved().RemoveDynamic(this, &ABaseHUD::HandleSkillRemoved);
 }

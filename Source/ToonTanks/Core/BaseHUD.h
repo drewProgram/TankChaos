@@ -4,6 +4,8 @@
 #include "GameFramework/HUD.h"
 #include "BaseHUD.generated.h"
 
+class ATankPlayer;
+
 UCLASS()
 class TOONTANKS_API ABaseHUD : public AHUD
 {
@@ -13,6 +15,8 @@ public:
 	ABaseHUD();
 
 protected:
+	ATankPlayer* PlayerPawn;
+
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintImplementableEvent)
@@ -29,4 +33,10 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void HandleSkillRemoved();
+
+	UFUNCTION(BlueprintCallable)
+	void BindListeners();
+
+	UFUNCTION(BlueprintCallable)
+	void UnbindListeners();
 };

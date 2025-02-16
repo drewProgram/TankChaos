@@ -117,6 +117,7 @@ void FSkillData::NotifySkillEnded()
 	UE_LOG(LogTemp, Display, TEXT("Tags end skill: %s"), *Owner->TagContainer.ToString());
 	if (UsesLeft == 0)
 	{
+		OnSkillSlotRemoved.Broadcast();
 		Owner->GetAttributesComponent()->RemovePassive(PassiveId);
 	}
 

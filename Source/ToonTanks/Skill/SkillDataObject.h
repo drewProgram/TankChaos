@@ -26,6 +26,9 @@ public:
 	UFUNCTION()
 	FOnSkillEndedDelegate& GetOnSkillEnded();
 
+	UFUNCTION()
+	FOnSkillSlotRemovedDelegate& GetOnSkillSlotRemoved();
+
 private:
 	friend class ATank;
 	friend class ATankNPC;
