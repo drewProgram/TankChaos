@@ -14,7 +14,6 @@ EBTNodeResult::Type UBTTask_UseSkill::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	{
 		if (ATank* NPC = Cast<ATank>(Controller->GetPawn()))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Will try to cast skill"));
 			NPC->RequestSkillCast();
 
 			FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);

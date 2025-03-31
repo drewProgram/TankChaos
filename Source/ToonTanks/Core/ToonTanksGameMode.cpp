@@ -31,6 +31,7 @@ void AToonTanksGameMode::ActorDied(AActor* DeadActor)
 			PlayerController->SetPlayerEnabledState(false);
 		}
 		GameOver(false);
+		return;
 	}
 	else if (ATower* Tower = Cast<ATower>(DeadActor))
 	{
@@ -85,8 +86,8 @@ void AToonTanksGameMode::HandleWaveChange()
 	switch (CurrentWave)
 	{
 	case 2:
-	//case 3:
-	//case 4:
+	case 3:
+	case 4:
 		UE_LOG(LogTemp, Display, TEXT("New wave appearing"));
 		EnemyHealthBonus += 10.f;
 		EnemyDamageBonus += 5.f;
@@ -95,7 +96,7 @@ void AToonTanksGameMode::HandleWaveChange()
 
 		break;
 
-	case 3:
+	case 5:
 		UE_LOG(LogTemp, Warning, TEXT("WARNING: BOSS ROUND"));
 
 		TotalEnemies = 6;
@@ -111,7 +112,7 @@ void AToonTanksGameMode::HandleWaveChange()
 		return;
 	}
 
-	OnWaveStarted.ExecuteIfBound();
+	OnWaveStarted.Broadcast();
 }
 
 void AToonTanksGameMode::HandleCountdownEnd(bool bPlayerEnabled)
@@ -148,7 +149,7 @@ float AToonTanksGameMode::GetEnemyDamageBonus()
 	return EnemyDamageBonus;
 }
 
-int32 AToonTanksGameMode::GetCurrentWave()
+int32 AToonTanksGameMode::GetCurrentWave() const
 {
 	return CurrentWave;
 }

@@ -8,6 +8,8 @@
 #include "GameFramework/SpringArmComponent.h"
 
 #include "../Attributes/AttributesComponent.h"
+#include "../TTGameplayTags.h"
+#include "../Weapons/Projectile.h"
 
 ATankPlayer::ATankPlayer()
 {
@@ -19,6 +21,8 @@ ATankPlayer::ATankPlayer()
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	CameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	CameraComponent->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+
+	bCanShoot = true;
 }
 
 void ATankPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -30,7 +34,7 @@ void ATankPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ATankPlayer::Move);
 
 		EnhancedInputComponent->BindAction(TurnTurretAction, ETriggerEvent::Triggered, this, &ATankPlayer::TurnTurret);
-
+		
 		EnhancedInputComponent->BindAction(TurnTankAction, ETriggerEvent::Triggered, this, &ATankPlayer::TurnTank);
 
 		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Triggered, this, &ATankPlayer::Shoot);
@@ -97,8 +101,50 @@ void ATankPlayer::TurnTank(const FInputActionValue& Value)
 		FRotator DeltaRotation = FRotator::ZeroRotator;
 		double DeltaTime = UGameplayStatics::GetWorldDeltaSeconds(GetWorld());
 
-		DeltaRotation.Yaw = TurnValue * DeltaTime * TurnRate;
+		DeltaRotation.Yaw = (TurnValue * 1.5) * TurnRate * DeltaTime;
 		AddActorLocalRotation(DeltaRotation);
 		TurretMesh->AddLocalRotation(DeltaRotation * -1);
 	}
+}
+
+void ATankPlayer::Shoot()
+{
+	if (bCanShoot)
+	{
+		FVector Location = ProjectileSpawnPoint->GetComponentLocation();
+		FRotator Rotation = ProjectileSpawnPoint->GetComponentRotation();
+
+		AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, Location, Rotation);
+		if (Projectile)
+		{
+			Projectile->SetOwner(this);
+			AActor* PO = Projectile->GetOwner();
+			if (PO != nullptr)
+			{
+				Projectile->SetStats(AttributesComponent->GetDamageModifier());
+				FGameplayTagContainer ProjectileTags;
+				if (!AttributesComponent->GetElementalDamage())
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Don't have elemental ammo. Normal damage"));
+					ProjectileTags.AddTag(TTGameplayTags::Damage_Physical);
+					Projectile->ApplyCustomTags(ProjectileTags);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Display, TEXT("Passive: %s"), *AttributesComponent->GetElementalDamage()->PassiveType.ToString());
+					ProjectileTags.AddTag(AttributesComponent->GetElementalDamage()->PassiveType);
+					Projectile->ApplyCustomTags(ProjectileTags);
+				}
+
+				bCanShoot = false;
+				GetWorldTimerManager().SetTimer(FireRateTimerHandle, this, &ATankPlayer::RemoveCooldown, AttributesComponent->GetFireRate(), false);
+			}
+		}
+
+	}
+}
+
+void ATankPlayer::RemoveCooldown()
+{
+	bCanShoot = true;
 }

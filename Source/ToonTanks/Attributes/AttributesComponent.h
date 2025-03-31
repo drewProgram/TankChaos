@@ -14,6 +14,10 @@
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStatusAppliedDelegate, FGameplayTag, float);
 DECLARE_MULTICAST_DELEGATE(FOnStatusRemovedDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnActorTookDamageDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnActorDiedDelegate);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPassiveAddedDelegate, FPassive);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPassiveRemovedDelegate, FPassive);
+
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class TOONTANKS_API UAttributesComponent : public UActorComponent
@@ -28,6 +32,11 @@ public:
 
 	FOnStatusAppliedDelegate OnStatusApplied;
 	FOnStatusRemovedDelegate OnStatusRemoved;
+
+	FOnPassiveAddedDelegate OnPassiveAdded;
+	FOnPassiveRemovedDelegate OnPassiveRemoved;
+
+	FOnActorDiedDelegate OnActorDied;
 
 	UPROPERTY(BlueprintAssignable)
 	FOnActorTookDamageDelegate OnHealthUpdated;
@@ -62,18 +71,31 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetMovementSpeed();
 
-	UFUNCTION()
-	FPassive GetElementalDamage();
+	FPassive* GetElementalDamage();
 
 	UFUNCTION(BlueprintCallable)
 	void UpdateMovementSpeedModifier();
 
-	FPassive GetStatusPassive();
-	FPassive GetElementalPassive();
+	FPassive* GetStatusPassive();
+	FPassive* GetElementalPassive();
 
-	void AddPassive(FPassive Passive);
+	// Expose stacks to HUD
+	UFUNCTION(BlueprintCallable)
+	int32 GetTotalMovementSpeedStack();
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetTotalHealthStack();
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetTotalDamageStack();
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetTotalFireRateStack();
+
+	FGuid AddPassive(FPassive Passive);
 
 	void RemovePassive(FGuid Id);
+	void RemovePassives();
 
 	UFUNCTION(BlueprintCallable)
 	bool DoesPassiveAlreadyExists(FPassive Passive);
@@ -81,6 +103,18 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Passives")
+	FPassiveStack HealthStack;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Passives")
+	FPassiveStack MovementSpeedStack;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Passives")
+	FPassiveStack FireRateStack;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Passives")
+	FPassiveStack DamageStack;
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Base Attributes")
@@ -110,21 +144,9 @@ private:
 
 	float DamageModifier;
 
-	UPROPERTY(EditAnywhere, Category = "Passives")
-	FPassiveStack HealthStack;
+	FPassive* StatusPassive;
 
-	UPROPERTY(EditAnywhere, Category = "Passives")
-	FPassiveStack MovementSpeedStack;
-
-	UPROPERTY(EditAnywhere, Category = "Passives")
-	FPassiveStack FireRateStack;
-
-	UPROPERTY(EditAnywhere, Category = "Passives")
-	FPassiveStack DamageStack;
-
-	FPassive StatusPassive;
-
-	FPassive ElementalPassive;
+	FPassive* ElementalPassive;
 
 	UPROPERTY(EditAnywhere, Category = "Passives")
 	TArray<FPassive> Passives;

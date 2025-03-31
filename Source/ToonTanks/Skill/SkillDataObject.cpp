@@ -5,6 +5,7 @@
 
 USkillDataObject::USkillDataObject()
 {
+	UE_LOG(LogTemp, Display, TEXT("Skill Object created"));
 }
 
 FOnSkillStartedDelegate& USkillDataObject::GetOnSkillStarted()
@@ -20,6 +21,13 @@ FOnSkillEndedDelegate& USkillDataObject::GetOnSkillEnded()
 FOnSkillSlotRemovedDelegate& USkillDataObject::GetOnSkillSlotRemoved()
 {
 	return SkillData.OnSkillSlotRemoved;
+}
+
+void USkillDataObject::RequestSkillCancel()
+{
+	UE_LOG(LogTemp, Display, TEXT("Trying to cancel skill"));
+	SkillData.UsesLeft = 0;
+	SkillData.CancelCurrentSkill();
 }
 
 const FSkillData& USkillDataObject::GetSkillData() const

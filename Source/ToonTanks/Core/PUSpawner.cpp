@@ -11,6 +11,9 @@ APUSpawner::APUSpawner()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	IntervalToTrySpawn = 10.f;
+	DropsNumber = 0;
 }
 
 // Called when the game starts or when spawned
@@ -22,7 +25,7 @@ void APUSpawner::BeginPlay()
 		TimerHandle,
 		this,
 		&APUSpawner::SpawnPowerUp,
-		10.f,
+		IntervalToTrySpawn,
 		true
 	);
 }
@@ -32,6 +35,7 @@ void APUSpawner::SpawnPowerUp()
 	UE_LOG(LogTemp, Display, TEXT("Trying to spawn item"));
 	if (UKismetMathLibrary::RandomBoolWithWeight(0.5f))
 	{
+		
 		UE_LOG(LogTemp, Display, TEXT("Spawning item somewhere"));
 		FVector OriginLocation = GetActorLocation();
 		UNavigationSystemV1* NavSystem = Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem());
@@ -42,7 +46,19 @@ void APUSpawner::SpawnPowerUp()
 		FRotator Rotation = FRotator::ZeroRotator;
 
 		FPassive Passive;
-		RandomizePowerUp(Passive);
+		if (DropsNumber == 8)
+		{
+			UE_LOG(LogTemp, Display, TEXT("Spawning Health"));
+			Passive.MaxDuration = HealthDuration;
+			Passive.Modifier = HealthModifier;
+			Passive.PassiveType = TTGameplayTags::Attribute_Health;
+			DropsNumber = 0;
+		}
+		else
+		{
+			RandomizePowerUp(Passive);
+			DropsNumber += 1;
+		}
 		
 		APowerUp* PU = GetWorld()->SpawnActor<APowerUp>(PowerUpClass, Location, Rotation);
 		PU->SetPassive(Passive);
@@ -53,18 +69,14 @@ void APUSpawner::SpawnPowerUp()
 void APUSpawner::RandomizePowerUp(FPassive& Passive)
 {
 	double random = FMath::RandRange(0, (int32)EPassiveType::END - 1);
+	
+
 	int32 randomInt = (int32)random;
 	GeneratedPassiveType = (EPassiveType)random;
 
 	switch (GeneratedPassiveType)
 	{
 	case EPassiveType::HEALTH:
-		UE_LOG(LogTemp, Display, TEXT("Health"));
-		Passive.MaxDuration = HealthDuration;
-		Passive.Modifier = HealthModifier;
-		Passive.PassiveType = TTGameplayTags::Attribute_Health;
-		break;
-
 	case EPassiveType::FIRE_RATE:
 		UE_LOG(LogTemp, Display, TEXT("Fire Rate"));
 		Passive.MaxDuration = FireRateDuration;

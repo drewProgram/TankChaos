@@ -9,7 +9,7 @@ ABaseAIController::ABaseAIController(FObjectInitializer const& ObjectInitializer
 void ABaseAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
 	Super::OnMoveCompleted(RequestID, Result);
-	
+
 	if (ATankNPC* NPC = Cast<ATankNPC>(GetPawn()))
 	{
 		FVector Location = NPC->GetRandomLocation();

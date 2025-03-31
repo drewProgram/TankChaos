@@ -29,6 +29,8 @@ public:
 	UFUNCTION()
 	FOnSkillSlotRemovedDelegate& GetOnSkillSlotRemoved();
 
+	void RequestSkillCancel();
+
 private:
 	friend class ATank;
 	friend class ATankNPC;

@@ -29,6 +29,8 @@ struct FPassive
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	FGuid PassiveId;
 
+	TArray<FGuid> LinkedPassiveId;
+
 	UPROPERTY(EditAnywhere)
 	float MaxDuration;
 
@@ -57,6 +59,8 @@ struct FPassiveStack
 	void Remove(FPassive*);
 
 	float GetTotalModifier();
+
+	int32 GetTotalPassives();
 
 protected:
 	UPROPERTY(VisibleAnywhere, Category = "Stats")

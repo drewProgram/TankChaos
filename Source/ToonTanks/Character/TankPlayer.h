@@ -31,6 +31,11 @@ protected:
 	void TurnTurret(const FInputActionValue& Value);
 	void TurnTank(const FInputActionValue& Value);
 
+	virtual void Shoot() override;
+
+	bool bCanShoot;
+
+	FTimerHandle FireRateTimerHandle;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
@@ -55,4 +60,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* ShootSpecialAction;
 
+	UFUNCTION()
+	void RemoveCooldown();
 };

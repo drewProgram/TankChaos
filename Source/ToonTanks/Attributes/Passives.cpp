@@ -17,17 +17,159 @@ void FPassive::Apply(UAttributesComponent* Ref, UWorld* WorldRef)
 			Ref->DamageStack.Add(this);
 			Ref->UpdateDamageModifier();
 		}
-		else if (PassiveType.MatchesTagExact(TTGameplayTags::Damage_Elemental_Ice))
+		else
 		{
-			Ref->ElementalPassive = *this;
-		}
-		else if (PassiveType.MatchesTagExact(TTGameplayTags::Damage_Elemental_Lightning))
-		{
-			Ref->ElementalPassive = *this;
+			if (Ref->ElementalPassive)
+			{
+				Ref->RemovePassive(Ref->ElementalPassive->PassiveId);
+			}
+
+			Ref->ElementalPassive = this;
 		}
 	}
 	else if (PassiveType.MatchesTag(TTGameplayTags::Status))
 	{
+		// reset duration of passives and reset timer to remove
+		if (Ref->StatusPassive)
+		{
+			WorldRef->GetTimerManager().ClearTimer(Ref->StatusPassive->TimerHandle);
+			Ref->StatusPassive->Duration = Duration;
+			
+			FTimerDelegate Del;
+
+			Del.BindLambda([=, *this] {
+				Ref->RemovePassive(PassiveId);
+			});
+
+			if (WorldRef)
+			{
+				WorldRef->GetTimerManager().SetTimer(
+					Ref->StatusPassive->TimerHandle,
+					Del,
+					Duration,
+					false
+				);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("Could not create timer, WorldRef is nullptr"));
+			}
+
+			if (PassiveType.MatchesTagExact(TTGameplayTags::Status_Bugged))
+			{
+				bool bFound1 = false;
+				bool bFound2 = false;
+				for (FPassive& Passive : Ref->Passives)
+				{
+					if (Passive.PassiveId == Ref->StatusPassive->LinkedPassiveId[0])
+					{
+						FTimerDelegate DelLinked;
+
+						DelLinked.BindLambda([=, *this] {
+							Ref->RemovePassive(PassiveId);
+						});
+
+						WorldRef->GetTimerManager().ClearTimer(Passive.TimerHandle);
+						Passive.Duration = Duration;
+
+						WorldRef->GetTimerManager().SetTimer(
+							Passive.TimerHandle,
+							DelLinked,
+							Duration,
+							false
+						);
+
+						bFound1 = true;
+					}
+					else if (Passive.PassiveId == Ref->StatusPassive->LinkedPassiveId[1])
+					{
+						FTimerDelegate DelLinked;
+
+						DelLinked.BindLambda([=, *this] {
+							Ref->RemovePassive(PassiveId);
+							});
+
+						WorldRef->GetTimerManager().ClearTimer(Passive.TimerHandle);
+						Passive.Duration = Duration;
+
+						WorldRef->GetTimerManager().SetTimer(
+							Passive.TimerHandle,
+							DelLinked,
+							Duration,
+							false
+						);
+						bFound2 = true;
+					}
+
+					if (bFound1 && bFound2)
+					{
+						UE_LOG(LogTemp, Display, TEXT("Found both Linked Passives, reseted their durations"));
+						break;
+					}
+				}
+			}
+			else if (PassiveType.MatchesTagExact(TTGameplayTags::Status_Chilled))
+			{
+				bool bFound1 = false;
+				bool bFound2 = false;
+				for (FPassive& Passive : Ref->Passives)
+				{
+					if (Passive.PassiveId == Ref->StatusPassive->LinkedPassiveId[0])
+					{
+						FTimerDelegate DelLinked;
+
+						DelLinked.BindLambda([=, *this] {
+							Ref->RemovePassive(PassiveId);
+							});
+
+						WorldRef->GetTimerManager().ClearTimer(Passive.TimerHandle);
+						Passive.Duration = Duration;
+
+						WorldRef->GetTimerManager().SetTimer(
+							Passive.TimerHandle,
+							DelLinked,
+							Duration,
+							false
+						);
+
+						bFound1 = true;
+					}
+					else if (Passive.PassiveId == Ref->StatusPassive->LinkedPassiveId[1])
+					{
+						FTimerDelegate DelLinked;
+
+						DelLinked.BindLambda([=, *this] {
+							Ref->RemovePassive(PassiveId);
+							});
+
+						if (WorldRef)
+						{
+							WorldRef->GetTimerManager().ClearTimer(Passive.TimerHandle);
+							Passive.Duration = Duration;
+
+							WorldRef->GetTimerManager().SetTimer(
+								Passive.TimerHandle,
+								DelLinked,
+								Duration,
+								false
+							);
+							bFound2 = true;
+						}
+					}
+
+					if (bFound1 && bFound2)
+					{
+						UE_LOG(LogTemp, Display, TEXT("Found both Linked Passives, reseted their durations"));
+						break;
+					}
+				}
+			}
+
+			return;
+		}
+
+		ABasePawn* MyOwner = Cast<ABasePawn>(Ref->GetOwner());
+
 		if (PassiveType.MatchesTagExact(TTGameplayTags::Status_Bugged))
 		{
 			FPassive MoveSpeedDebuff;
@@ -41,10 +183,11 @@ void FPassive::Apply(UAttributesComponent* Ref, UWorld* WorldRef)
 			FireRateDebuff.Modifier = Modifier;
 			FireRateDebuff.MaxDuration = Duration;
 
-			Ref->AddPassive(FireRateDebuff);
-			Ref->AddPassive(MoveSpeedDebuff);
+			LinkedPassiveId.Push(Ref->AddPassive(FireRateDebuff));
+			LinkedPassiveId.Push(Ref->AddPassive(MoveSpeedDebuff));
 
-			Ref->StatusPassive = *this;
+			Ref->StatusPassive = this;
+			MyOwner->SetBuggedVFX();
 		}
 		else if (PassiveType.MatchesTagExact(TTGameplayTags::Status_Chilled))
 		{
@@ -59,10 +202,11 @@ void FPassive::Apply(UAttributesComponent* Ref, UWorld* WorldRef)
 			FireRateDebuff.Modifier = Modifier;
 			FireRateDebuff.MaxDuration = Duration;
 
-			Ref->AddPassive(FireRateDebuff);
-			Ref->AddPassive(MoveSpeedDebuff);
+			LinkedPassiveId.Push(Ref->AddPassive(FireRateDebuff));
+			LinkedPassiveId.Push(Ref->AddPassive(MoveSpeedDebuff));
 
-			Ref->StatusPassive = *this;
+			Ref->StatusPassive = this;
+			MyOwner->SetChilledVFX();
 		}
 	}
 	else if (PassiveType.MatchesTag(TTGameplayTags::Skill))
@@ -140,22 +284,29 @@ void FPassive::Remove(UAttributesComponent* Ref)
 		}
 		else if (PassiveType.MatchesTagExact(TTGameplayTags::Damage_Elemental_Ice))
 		{
-			Ref->ElementalPassive = FPassive();
+			Ref->ElementalPassive = nullptr;
 		}
 		else if (PassiveType.MatchesTagExact(TTGameplayTags::Damage_Elemental_Lightning))
 		{
-			Ref->ElementalPassive = FPassive();
+			Ref->ElementalPassive = nullptr;
 		}
 	}
 	else if (PassiveType.MatchesTag(TTGameplayTags::Status))
 	{
+		ABasePawn* MyOwner = Cast<ABasePawn>(Ref->GetOwner());
+		if (MyOwner == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Owner is nullptr!!!!"));
+			return;
+		}
 		if (PassiveType.MatchesTagExact(TTGameplayTags::Status_Bugged))
 		{
-			Ref->StatusPassive = FPassive();
+			Ref->StatusPassive = nullptr;
+			
 		}
 		else if (PassiveType.MatchesTagExact(TTGameplayTags::Status_Chilled))
 		{
-			Ref->StatusPassive = FPassive();
+			Ref->StatusPassive = nullptr;
 		}
 		Ref->OnStatusRemoved.Broadcast();
 	}
@@ -230,4 +381,9 @@ void FPassiveStack::Remove(FPassive* Passive)
 float FPassiveStack::GetTotalModifier()
 {
 	return TotalModifier;
+}
+
+int32 FPassiveStack::GetTotalPassives()
+{
+	return Passives.Num();
 }

@@ -13,6 +13,13 @@ ATank::ATank()
 {
 	SkillDataObj = CreateDefaultSubobject<USkillDataObject>(TEXT("SkillDataObject"));
 	SkillDataObj->SkillData.Owner = this;
+
+	UE_LOG(LogTemp, Warning, TEXT("Creating SkillDataObject on %s"), *GetActorNameOrLabel());
+
+	if (SkillDataObj == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Error when trying to create skill data object"));
+	}
 }
 
 void ATank::Tick(float DeltaTime)
@@ -29,6 +36,15 @@ void ATank::Tick(float DeltaTime)
 void ATank::HandleDestruction()
 {
 	Super::HandleDestruction();
+
+	FGameplayTagContainer StatesToCheck;
+	StatesToCheck.AddTag(TTGameplayTags::State_CastingSkill);
+	StatesToCheck.AddTag(TTGameplayTags::State_StartingCastSkill);
+
+	if (TagContainer.HasAnyExact(StatesToCheck))
+	{
+		SkillDataObj->RequestSkillCancel();
+	}
 
 	SetActorHiddenInGame(true);
 	SetActorTickEnabled(false);
@@ -47,10 +63,30 @@ void ATank::SetSkillClass(TSubclassOf<class ASkill> SkillClass, TSubclassOf<clas
 
 void ATank::SetSkill(FGameplayTag SkillType, FGameplayTag SkillNature, float Duration, FGuid Id)
 {
-	// override skill if it's different from current skill
 	if (SkillDataObj->SkillData.SkillType.IsValid() && !SkillDataObj->SkillData.SkillType.MatchesTagExact(SkillType))
 	{
-		AttributesComponent->RemovePassive(SkillDataObj->SkillData.PassiveId);
+		FGameplayTagContainer StatesToCheck;
+		StatesToCheck.AddTag(TTGameplayTags::State_CastingSkill);
+		StatesToCheck.AddTag(TTGameplayTags::State_StartingCastSkill);
+		StatesToCheck.AddTag(TTGameplayTags::State_EndingCastSkill);
+		UE_LOG(LogTemp, Warning, TEXT("Remove passive"));
+		if (TagContainer.HasAnyExact(StatesToCheck))
+		{
+			SkillDataObj->RequestSkillCancel();
+		}
+		else
+		{
+			AttributesComponent->RemovePassive(SkillDataObj->SkillData.PassiveId);
+		}
+	}
+	else if (SkillDataObj->SkillData.SkillType.IsValid() && SkillDataObj->SkillData.SkillType.MatchesTagExact(SkillType))
+	{
+		SkillDataObj->SkillData.UpdateSkillCount();
+
+		SkillDataObj->SkillData.OnSkillStarted.Broadcast();
+		SkillDataObj->SkillData.OnSkillEnded.Broadcast();
+
+		return;
 	}
 
 	SkillDataObj->SkillData.SkillType = SkillType;
@@ -122,7 +158,6 @@ void ATank::ShootSpecial()
 				UE_LOG(LogTemp, Warning, TEXT("Can't use special now"));
 				return;
 			}
-
 
 			TagContainer.AddTag(TTGameplayTags::State_StartingCastSkill);
 

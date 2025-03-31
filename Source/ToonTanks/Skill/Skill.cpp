@@ -20,6 +20,7 @@ FSkillData::FSkillData()
 	HasSkillEnded = true;
 	SkillClass = nullptr;
 
+	SpawnedSkill = nullptr;
 	Owner = nullptr;
 	SkillType = FGameplayTag::EmptyTag;
 	Duration = 1.f;
@@ -29,6 +30,13 @@ FSkillData::FSkillData()
 int32 FSkillData::GetUsesLeft()
 {
 	return UsesLeft;
+}
+
+void FSkillData::CancelCurrentSkill()
+{
+	Owner->GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+	
+	NotifySkillEnded();
 }
 
 bool FSkillData::RequestCastSkill(FVector SpawnLocation, UWorld* WorldRef, FRotator Rotation)
@@ -42,16 +50,14 @@ bool FSkillData::RequestCastSkill(FVector SpawnLocation, UWorld* WorldRef, FRota
 
 	if (UsesLeft <= 0) return false;
 
-
 	UE_LOG(LogTemp, Display, TEXT("Requesting skill"));
 	UE_LOG(LogTemp, Warning, TEXT("Skill nature: %s"), *SkillNature.GetTagName().ToString());
 	HasSkillEnded = false;
 
 	FVector LineStart = SpawnLocation;
 	FVector LineEnd = LineStart + (Owner->GetTurretLookDirection() * Range);
-	FTimerHandle TimerHandle;
 	FTimerDelegate Del;
-
+	
 	if (SkillClass)
 	{
 		UE_LOG(LogTemp, Display, TEXT("Skill class exists"));
@@ -63,7 +69,7 @@ bool FSkillData::RequestCastSkill(FVector SpawnLocation, UWorld* WorldRef, FRota
 
 			Del.BindLambda([this] {
 				NotifySkillEnded();
-				});
+			});
 
 			// timer to prevent many skill projectiles being shot at the same spot
 			WorldRef->GetTimerManager().SetTimer(
@@ -82,7 +88,9 @@ bool FSkillData::RequestCastSkill(FVector SpawnLocation, UWorld* WorldRef, FRota
 		else
 		{
 			ASkill* SkillRef = WorldRef->SpawnActor<ASkill>(SkillClass, SpawnLocation, Rotation);
+			SpawnedSkill = SkillRef;
 			SkillRef->SetupSkillData(*this);
+			SkillRef->BindToKillEvent();
 			UE_LOG(LogTemp, Display, TEXT("Skill class name: %s"), *SkillRef->GetActorNameOrLabel());
 		}
 
@@ -121,6 +129,7 @@ void FSkillData::NotifySkillEnded()
 		Owner->GetAttributesComponent()->RemovePassive(PassiveId);
 	}
 
+	SpawnedSkill = nullptr;
 	HasSkillEnded = true;
 	OnSkillEnded.Broadcast();
 }
@@ -150,6 +159,7 @@ void ASkill::BeginPlay()
 	Super::BeginPlay();
 
 	UE_LOG(LogTemp, Display, TEXT("Skill spawned!"));
+	UE_LOG(LogTemp, Display, TEXT("My owner is: "));
 }
 
 void ASkill::Tick(float DeltaTime)
@@ -184,19 +194,24 @@ void ASkill::Tick(float DeltaTime)
 
 void ASkill::SetDestroyTimer()
 {
-	FTimerHandle TimerHandle;
 	//UE_LOG(LogTemp, Display, TEXT("Timer set to %f seconds"), SkillData.Duration);
 	GetWorld()->GetTimerManager().SetTimer(
 		TimerHandle,
 		this,
-		&ASkill::DestroyTest,
+		&ASkill::DestroySkill,
 		SkillData.Duration,
 		false
 	);
 }
 
-void ASkill::DestroyTest()
+void ASkill::BindToKillEvent()
 {
+	SkillData.Owner->GetAttributesComponent()->OnActorDied.AddUObject(this, &ASkill::DestroySkill);
+}
+
+void ASkill::DestroySkill()
+{
+	GetWorldTimerManager().ClearTimer(TimerHandle);
 	UE_LOG(LogTemp, Display, TEXT("Destroying skill!"));
 	Destroy();
 }

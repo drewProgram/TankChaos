@@ -18,7 +18,9 @@ UAttributesComponent::UAttributesComponent()
 	Health(0),
 	FireRate(0),
 	BaseFireRate(60.f),
-	BaseMovementSpeed(500.f)
+	BaseMovementSpeed(500.f),
+	StatusPassive(nullptr),
+	ElementalPassive(nullptr)
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -55,6 +57,15 @@ void UAttributesComponent::InitPassives()
 	}
 }
 
+void UAttributesComponent::RemovePassives()
+{
+	for (FPassive& Passive : Passives)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(Passive.TimerHandle);
+		Passive.Remove(this);
+	}
+}
+
 void UAttributesComponent::DamageTaken(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* Instigator, AActor* DamageCauser)
 {
 	if (Damage <= 0.f) return;
@@ -84,7 +95,6 @@ void UAttributesComponent::DamageTaken(AActor* DamagedActor, float Damage, const
 
 						ABasePawn* MyOwner = Cast<ABasePawn>(GetOwner());
 						OnStatusApplied.Broadcast(Stun.PassiveType, Stun.MaxDuration);
-						MyOwner->SetBuggedVFX();
 						AddPassive(Stun);
 					}
 				}
@@ -103,7 +113,6 @@ void UAttributesComponent::DamageTaken(AActor* DamagedActor, float Damage, const
 						Chill.MaxDuration = 2.f;
 
 						ABasePawn* MyOwner = Cast<ABasePawn>(GetOwner());
-						MyOwner->SetChilledVFX();
 						OnStatusApplied.Broadcast(Chill.PassiveType, Chill.MaxDuration);
 						AddPassive(Chill);
 					}
@@ -118,6 +127,7 @@ void UAttributesComponent::DamageTaken(AActor* DamagedActor, float Damage, const
 			AToonTanksGameMode* GameMode = Cast<AToonTanksGameMode>(UGameplayStatics::GetGameMode(this));
 			if (GameMode)
 			{
+				OnActorDied.Broadcast();
 				GameMode->ActorDied(DamagedActor);
 			}
 		}
@@ -185,7 +195,7 @@ float UAttributesComponent::GetMovementSpeed()
 	return MovementSpeed;
 }
 
-FPassive UAttributesComponent::GetElementalDamage()
+FPassive* UAttributesComponent::GetElementalDamage()
 {
 	return ElementalPassive;
 }
@@ -196,46 +206,73 @@ void UAttributesComponent::UpdateMovementSpeedModifier()
 	MovementSpeed = BaseMovementSpeed + (BaseMovementSpeed * MovementSpeedModifier);
 }
 
-FPassive UAttributesComponent::GetStatusPassive()
+FPassive* UAttributesComponent::GetStatusPassive()
 {
 	return StatusPassive;
 }
 
-FPassive UAttributesComponent::GetElementalPassive()
+FPassive* UAttributesComponent::GetElementalPassive()
 {
 	return ElementalPassive;
 }
 
-void UAttributesComponent::AddPassive(FPassive Passive)
+int32 UAttributesComponent::GetTotalMovementSpeedStack()
+{
+	return MovementSpeedStack.GetTotalPassives();
+}
+
+int32 UAttributesComponent::GetTotalHealthStack()
+{
+	return HealthStack.GetTotalPassives();
+}
+
+
+int32 UAttributesComponent::GetTotalDamageStack()
+{
+	return DamageStack.GetTotalPassives();
+}
+
+
+int32 UAttributesComponent::GetTotalFireRateStack()
+{
+	return FireRateStack.GetTotalPassives();
+}
+
+FGuid UAttributesComponent::AddPassive(FPassive Passive)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Número de passivas: %d"), Passives.Num());
 
 	Passive.PassiveId = FGuid::NewGuid();
 
-	Passives.Add(Passive);
-
-	Passive.Apply(this, GetWorld());
+	if (!StatusPassive)
+	{
+		Passives.Add(Passive);
+		Passives.Last().Apply(this, GetWorld());
+		OnPassiveAdded.Broadcast(Passive);
+	}
+	else
+	{
+		Passive.Apply(this, GetWorld());
+	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Número de passivas: %d"), Passives.Num());
 
+	return Passive.PassiveId;
 }
 
 void UAttributesComponent::RemovePassive(FGuid Id)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Passando por remove passive. FGuid: %s"), *Id.ToString());
-	TArray<FPassive> PassivesTemp;
-	PassivesTemp = Passives;
 	bool bFound = false;
+	FPassive PassiveTemp;
 	for (FPassive& Passive : Passives)
 	{
+		UE_LOG(LogTemp, Display, TEXT("Passing by passive %s with id %s"), *Passive.PassiveType.ToString(), *Passive.PassiveId.ToString());
 		if (Passive.PassiveId == Id)
 		{
-			// c++ doesn't let modify element while is being iterated, so we create a temp array and copy the changes later
-			PassivesTemp.Remove(Passive);
-
-			FPassive PassiveTemp = Passive;
-			PassiveTemp.Remove(this);
-
+			UE_LOG(LogTemp, Warning, TEXT("Found right passive, will try to remove"));
+			
+			PassiveTemp = Passive;
 			bFound = true;
 
 			break;
@@ -244,7 +281,15 @@ void UAttributesComponent::RemovePassive(FGuid Id)
 
 	if (bFound)
 	{
-		Passives = PassivesTemp;
+		Passives.Remove(PassiveTemp);
+
+		OnPassiveRemoved.Broadcast(PassiveTemp);
+
+		UE_LOG(LogTemp, Warning, TEXT("Called OnPassiveRemoved delegate"));
+
+		PassiveTemp.Remove(this);
+
+		UE_LOG(LogTemp, Warning, TEXT("Removed passive"));
 		return;
 	}
 

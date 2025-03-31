@@ -14,7 +14,6 @@ EBTNodeResult::Type UBTTask_Shoot::ExecuteTask(UBehaviorTreeComponent& OwnerComp
 	{
 		if (ATankNPC* NPC = Cast<ATankNPC>(Controller->GetPawn()))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Will try to shoot"));
 			NPC->RequestShoot();
 
 			FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);

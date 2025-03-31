@@ -23,7 +23,7 @@ void AEnemySpawner::BeginPlay()
 	AToonTanksGameMode* GameMode = Cast<AToonTanksGameMode>(UGameplayStatics::GetGameMode(this));
 	if (GameMode)
 	{
-		GameMode->OnWaveStarted.BindUObject(this, &AEnemySpawner::SpawnEnemies);
+		GameMode->OnWaveStarted.AddUObject(this, &AEnemySpawner::SpawnEnemies);
 	}
 	
 	SpawnEnemies();
@@ -38,10 +38,11 @@ void AEnemySpawner::RandomizeAndSpawn(UNavigationSystemV1* NavSystem, FVector Or
 	FRotator Rotation = FRotator::ZeroRotator;
 
 	ABasePawn* Enemy = GetWorld()->SpawnActor<ABasePawn>(EnemyClass, Location, Rotation);
-	if (Enemy == nullptr)
+	while (Enemy == nullptr)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Skill ended"));
+		UE_LOG(LogTemp, Display, TEXT("Trying to spawn again"));
 		NavSystem->GetRandomReachablePointInRadius(OriginLocation, 5000.f, ResultLocation);
+		Location = FVector(ResultLocation.Location.X, ResultLocation.Location.Y, 85.f);
 		Enemy = GetWorld()->SpawnActor<ABasePawn>(EnemyClass, Location, Rotation);
 	}
 }
@@ -75,7 +76,7 @@ void AEnemySpawner::SpawnEnemies()
 		UNavigationSystemV1* NavSystem = Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem());
 		for (int i = 1; i <= TotalEnemies; i++)
 		{
-			if (GameMode->GetCurrentWave() == 2 && i == 6)
+			if (GameMode->GetCurrentWave() == 5)
 			{
 				SpawnBoss();
 				return;

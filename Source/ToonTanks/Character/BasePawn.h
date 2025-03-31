@@ -76,7 +76,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintGetter=GetAttributesComponent, Category = "Combat")
 	UAttributesComponent* AttributesComponent;
 
-private:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	TSubclassOf<class AProjectile> ProjectileClass;
 

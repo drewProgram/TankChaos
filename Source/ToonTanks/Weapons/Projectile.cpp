@@ -108,8 +108,8 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 
 	if (OtherActor && OtherActor != this && OtherActor != MyOwner)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Will apply %f damage"), Damage);
-		UE_LOG(LogTemp, Display, TEXT("Damage of type: %s"), *DamageType.ToString());
+		//UE_LOG(LogTemp, Display, TEXT("Will apply %f damage"), Damage);
+		//UE_LOG(LogTemp, Display, TEXT("Damage of type: %s"), *DamageType.ToString());
 		UGameplayStatics::ApplyDamage(OtherActor, Damage, MyOwnerInstigator, this, DamageTypeClass);
 		UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
 	}

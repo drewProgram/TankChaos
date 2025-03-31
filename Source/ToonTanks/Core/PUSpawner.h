@@ -24,7 +24,12 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	int32 DropsNumber;
+
 	EPassiveType GeneratedPassiveType;
+
+	UPROPERTY(EditAnywhere, Category = "Timer")
+	float IntervalToTrySpawn;
 
 	UPROPERTY(EditAnywhere, Category = "Health")
 	float HealthModifier;

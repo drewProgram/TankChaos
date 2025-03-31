@@ -26,11 +26,16 @@ public:
 
 	FVector GetRandomLocation();
 
+	virtual void HandleDestruction() override;
+
 	void RequestShoot();
 	void RemoveCooldown();
 
 protected:
 	virtual void BeginPlay() override;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
+	class UWidgetComponent* HealthBar;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
 	UBehaviorTree* Tree;
@@ -50,6 +55,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	bool bCanShoot;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void HandleHealthBarUpdate();
 
 	void FindRandomLocation();
 };

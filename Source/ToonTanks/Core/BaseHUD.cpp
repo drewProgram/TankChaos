@@ -4,6 +4,7 @@
 
 #include "../Character/TankPlayer.h"
 #include "../Attributes/AttributesComponent.h"
+#include "ToonTanksGameMode.h"
 #include "../Skill/SkillDataObject.h"
 
 ABaseHUD::ABaseHUD()
@@ -21,7 +22,12 @@ void ABaseHUD::BeginPlay()
 		if (PlayerPawn->GetSkillDataObject())
 		{
 			PlayerPawn->GetAttributesComponent()->OnHealthUpdated.AddDynamic(this, &ABaseHUD::HandleHealthUpdated);
+			PlayerPawn->GetAttributesComponent()->OnPassiveAdded.AddUObject(this, &ABaseHUD::HandlePassiveAdded);
+			PlayerPawn->GetAttributesComponent()->OnPassiveRemoved.AddUObject(this, &ABaseHUD::HandlePassiveRemoved);
 			PlayerPawn->OnActorGotSkill.AddDynamic(this, &ABaseHUD::HandleNewSkill);
+
+			AToonTanksGameMode* GameMode = Cast<AToonTanksGameMode>(UGameplayStatics::GetGameMode(this));
+			GameMode->OnWaveStarted.AddUObject(this, &ABaseHUD::HandleWaveChanged);
 		}
 		else
 		{
@@ -32,6 +38,18 @@ void ABaseHUD::BeginPlay()
 	{
 		UE_LOG(LogTemp, Error, TEXT("PlayerPawn is nullptr"));
 	}
+}
+
+void ABaseHUD::SetTimerToDeleteNotification(float Duration)
+{
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(
+		TimerHandle,
+		this,
+		&ABaseHUD::SetNotificationTextToBlank,
+		Duration,
+		false
+	);
 }
 
 void ABaseHUD::BindListeners()

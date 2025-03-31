@@ -43,6 +43,8 @@ struct FSkillData
 	UPROPERTY(BlueprintReadOnly)
 	FGuid PassiveId;
 
+	FTimerHandle TimerHandle;
+
 	UPROPERTY(EditAnywhere)
 	float Damage;
 
@@ -60,6 +62,8 @@ struct FSkillData
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<ASkill> SkillClass;
+
+	ASkill* SpawnedSkill;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class ASkillSpawner> SkillSpawner;
@@ -83,6 +87,8 @@ struct FSkillData
 
 	int32 GetUsesLeft();
 
+	void CancelCurrentSkill();
+
 	bool RequestCastSkill(FVector SpawnLocation, UWorld* WorldRef, FRotator Rotation = FRotator());
 
 	void NotifySkillEnded();
@@ -90,6 +96,8 @@ struct FSkillData
 	void UpdateSkillCount();
 
 private:
+	friend class USkillDataObject;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	int32 UsesLeft;
 };
@@ -113,7 +121,15 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void SetupSkillData(FSkillData SD);
 
+	UFUNCTION(BlueprintCallable)
+	void BindToKillEvent();
+
+	UFUNCTION()
+	void DestroySkill();
+
+	FTimerHandle TimerHandle;
 protected:
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -131,6 +147,4 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void SetDestroyTimer();
 
-	UFUNCTION()
-	void DestroyTest();
 };

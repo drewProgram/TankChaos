@@ -3,6 +3,7 @@
 #include "NavigationSystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/FloatingPawnMovement.h"
+#include "Components/WidgetComponent.h"
 
 #include "../Attributes/AttributesComponent.h"
 #include "../Core/BaseAIController.h"
@@ -13,6 +14,24 @@ ATankNPC::ATankNPC()
 	SearchRadius = 1500.f;
 
 	MovementComponent = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("Movement Component"));
+	HealthBar = CreateDefaultSubobject<UWidgetComponent>(TEXT("Health Bar"));
+	HealthBar->SetupAttachment(BaseMesh);
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> WidgetClass{ TEXT("/Game/Blueprints/Widgets/WBP_NPCHealthBar") };
+	if (WidgetClass.Succeeded())
+	{
+		HealthBar->SetWidgetClass(WidgetClass.Class);
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Boss constructor called"));
+	if (SkillDataObj == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SkillData nullptr"));
+
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SkillData valid"));
+	}
 }
 
 UBehaviorTree* ATankNPC::GetBehaviorTree() const
@@ -41,16 +60,26 @@ FVector ATankNPC::GetRandomLocation()
 	return LocationToMove;
 }
 
+void ATankNPC::HandleDestruction()
+{
+	Super::HandleDestruction();
+
+	Destroy();
+}
+
 void ATankNPC::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GetAttributesComponent()->OnHealthUpdated.AddDynamic(this, &ATankNPC::HandleHealthBarUpdate);
+
 	AIController = Cast<ABaseAIController>(GetController());
 
 	FindRandomLocation();
 	AIController->MoveToLocation(LocationToMove);
 
 	SetSkill(TTGameplayTags::Skill_Laser, TTGameplayTags::SkillNature_Beam, 5.f, FGuid::NewGuid());
-	
+
 	SkillDataObj->SkillData.MaxUses = 10;
 	SkillDataObj->SkillData.UpdateSkillCount();
 	SkillDataObj->SkillData.Damage = 1.f;
@@ -98,7 +127,7 @@ void ATankNPC::RequestShoot()
 
 void ATankNPC::RemoveCooldown()
 {
-	if (AttributesComponent->GetStatusPassive().PassiveType.IsValid())
+	if (AttributesComponent->GetStatusPassive())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Tchau, estou bugado"));
 		return;

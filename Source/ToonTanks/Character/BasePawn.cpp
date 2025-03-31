@@ -49,20 +49,18 @@ void ABasePawn::Shoot()
 		AActor* PO = Projectile->GetOwner();
 		if (PO != nullptr)
 		{
-			UE_LOG(LogTemp, Display, TEXT("Owner set successfuly. Owner: %s"), *PO->GetActorLabel());
-			
 			Projectile->SetStats(AttributesComponent->GetDamageModifier());
 			FGameplayTagContainer ProjectileTags;
-			if (!AttributesComponent->GetElementalDamage().PassiveId.IsValid())
+			if (!AttributesComponent->GetElementalDamage())
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Don't have elemental ammo. Normal damage"));
+				//UE_LOG(LogTemp, Warning, TEXT("Don't have elemental ammo. Normal damage"));
 				ProjectileTags.AddTag(TTGameplayTags::Damage_Physical);
 				Projectile->ApplyCustomTags(ProjectileTags);
 			}
 			else
 			{
-				UE_LOG(LogTemp, Display, TEXT("Passive: %s"), *AttributesComponent->GetElementalDamage().PassiveType.ToString());
-				ProjectileTags.AddTag(AttributesComponent->GetElementalDamage().PassiveType);
+				//UE_LOG(LogTemp, Display, TEXT("Passive: %s"), *AttributesComponent->GetElementalDamage().PassiveType.ToString());
+				ProjectileTags.AddTag(AttributesComponent->GetElementalDamage()->PassiveType);
 				Projectile->ApplyCustomTags(ProjectileTags);
 			}
 		}

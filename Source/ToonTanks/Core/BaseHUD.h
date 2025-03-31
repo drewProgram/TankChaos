@@ -2,9 +2,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
+
+#include "../Attributes/Passives.h"
+
 #include "BaseHUD.generated.h"
 
 class ATankPlayer;
+class UUserWidget;
 
 UCLASS()
 class TOONTANKS_API ABaseHUD : public AHUD
@@ -14,10 +18,22 @@ class TOONTANKS_API ABaseHUD : public AHUD
 public:
 	ABaseHUD();
 
+	UFUNCTION(BlueprintCallable)
+	void UnbindListeners();
+
 protected:
 	ATankPlayer* PlayerPawn;
 
+	UPROPERTY(BlueprintReadWrite)
+	TMap<FGameplayTag, UUserWidget*> BuffMap;
+
 	virtual void BeginPlay() override;
+
+	UFUNCTION(BlueprintCallable)
+	void SetTimerToDeleteNotification(float Duration);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void SetNotificationTextToBlank();
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void HandleHealthUpdated();
@@ -34,9 +50,17 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void HandleSkillRemoved();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void HandlePassiveAdded(FPassive Passive);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void HandlePassiveRemoved(FPassive Passive);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void HandleWaveChanged();
+
 	UFUNCTION(BlueprintCallable)
 	void BindListeners();
 
-	UFUNCTION(BlueprintCallable)
-	void UnbindListeners();
+	
 };

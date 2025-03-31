@@ -62,6 +62,6 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float TurnRate;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintGetter = GetSkillDataObject, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, BlueprintGetter = GetSkillDataObject, meta = (AllowPrivateAccess = "true"))
 	USkillDataObject* SkillDataObj;
 };

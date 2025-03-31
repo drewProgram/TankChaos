@@ -47,7 +47,7 @@ void ATower::Tick(float DeltaTime)
 		Turn(Tank->GetActorLocation());
 		if (bCanShoot)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Can shoot"));
+			//UE_LOG(LogTemp, Warning, TEXT("Can shoot"));
 			Shoot();
 			bCanShoot = false;
 			GetWorldTimerManager().SetTimer(FireRateTimerHandle, this, &ATower::RemoveCooldown, AttributesComponent->GetFireRate(), false);
@@ -60,7 +60,7 @@ void ATower::HandleDestruction()
 {
 	Super::HandleDestruction();
 
-	RemoveVFX();
+	AttributesComponent->RemovePassives();
 	Destroy();
 }
 
@@ -89,7 +89,7 @@ void ATower::HandleStatusRemoved()
 
 void ATower::RemoveCooldown()
 {
-	if (AttributesComponent->GetStatusPassive().PassiveType.IsValid())
+	if (AttributesComponent->GetStatusPassive())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Tchau, estou bugado"));
 		return;

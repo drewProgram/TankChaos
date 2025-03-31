@@ -6,7 +6,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "ToonTanksGameMode.generated.h"
 
-DECLARE_DELEGATE(FOnWaveStartedDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnWaveStartedDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnCountdownEnded);
 
 /**
@@ -30,7 +30,8 @@ public:
 	float GetEnemyHealthBonus();
 	float GetEnemyDamageBonus();
 
-	int32 GetCurrentWave();
+	UFUNCTION(BlueprintCallable)
+	int32 GetCurrentWave() const;
 
 	FOnWaveStartedDelegate OnWaveStarted;
 	FOnCountdownEnded OnCountdownEnded;
@@ -44,6 +45,8 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void GameOver(bool bWonGame);
 
+	UPROPERTY(VisibleAnywhere, BlueprintGetter = GetCurrentWave, Category = "Wave")
+	int32 CurrentWave;
 
 private:
 	class ATankPlayer* TankPlayer;
@@ -56,7 +59,7 @@ private:
 
 	int32 TargetTowers;
 	int32 TotalEnemies;
-	int32 CurrentWave;
+
 
 	UPROPERTY(EditDefaultsOnly, Category = "Global Enemy Attribute Bonus")
 	float EnemyHealthBonus;
