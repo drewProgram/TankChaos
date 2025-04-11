@@ -24,6 +24,8 @@ public:
 protected:
 	ATankPlayer* PlayerPawn;
 
+	FTimerHandle NotificationTimer;
+
 	UPROPERTY(BlueprintReadWrite)
 	TMap<FGameplayTag, UUserWidget*> BuffMap;
 

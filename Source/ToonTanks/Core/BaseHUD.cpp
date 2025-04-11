@@ -42,9 +42,8 @@ void ABaseHUD::BeginPlay()
 
 void ABaseHUD::SetTimerToDeleteNotification(float Duration)
 {
-	FTimerHandle TimerHandle;
 	GetWorldTimerManager().SetTimer(
-		TimerHandle,
+		NotificationTimer,
 		this,
 		&ABaseHUD::SetNotificationTextToBlank,
 		Duration,

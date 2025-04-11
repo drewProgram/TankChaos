@@ -43,11 +43,11 @@ void APowerUp::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	// on every frame change rotation for a smooth rotating actor
-	FRotator NewRotation = FRotator(PitchValue, YawValue, RollValue);
+	FRotator NewRotation = FRotator(PitchValue * DeltaTime, YawValue * DeltaTime, RollValue * DeltaTime);
 
 	FQuat QuatRotation = FQuat(NewRotation);
 
-	AddActorLocalRotation(QuatRotation, false, 0, ETeleportType::None);
+	AddActorLocalRotation(QuatRotation, false, nullptr, ETeleportType::None);
 }
 
 void APowerUp::SetPassive(FPassive P)

@@ -36,6 +36,8 @@ void FSkillData::CancelCurrentSkill()
 {
 	Owner->GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
 	
+	UE_LOG(LogTemp, Warning, TEXT("Cancelling skill"));
+
 	NotifySkillEnded();
 }
 
@@ -119,10 +121,10 @@ bool FSkillData::RequestCastSkill(FVector SpawnLocation, UWorld* WorldRef, FRota
 
 void FSkillData::NotifySkillEnded()
 {
-	UE_LOG(LogTemp, Display, TEXT("Tags start skill: %s"), *Owner->TagContainer.ToString());
+	UE_LOG(LogTemp, Display, TEXT("[FSkillData::NotifySkillEnded] Tags start skill: %s"), *Owner->TagContainer.ToString());
 	Owner->TagContainer.RemoveTag(TTGameplayTags::State_CastingSkill);
 	Owner->TagContainer.AddTag(TTGameplayTags::State_EndingCastSkill);
-	UE_LOG(LogTemp, Display, TEXT("Tags end skill: %s"), *Owner->TagContainer.ToString());
+	UE_LOG(LogTemp, Display, TEXT("[FSkillData::NotifySkillEnded] Tags end skill: %s"), *Owner->TagContainer.ToString());
 	if (UsesLeft == 0)
 	{
 		OnSkillSlotRemoved.Broadcast();

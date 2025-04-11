@@ -5,20 +5,38 @@
 #include "../Character/Tank.h"
 #include "../Character/Tower.h"
 #include "../Character/TankPlayer.h"
+#include "ToonTanksGameInstance.h"
 #include "../Character/ToonTanksPlayerController.h"
 #include "../Attributes/AttributesComponent.h"
 
 AToonTanksGameMode::AToonTanksGameMode()
-	: StartDelay(3.f), TargetTowers(0), CurrentWave(1), TotalEnemies(5)
+	: StartDelay(3.f), TargetTowers(0), CurrentWave(1), TotalEnemies(5), bGameEnded(false)
 {
-
 }
 
 void AToonTanksGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
+	UToonTanksGameInstance* GameInstance = Cast<UToonTanksGameInstance>(GetWorld()->GetGameInstance());
+	if (GameInstance)
+	{
+		GameInstance->bIsInGame = true;
+	}
+
 	HandleGameStart();
+}
+
+void AToonTanksGameMode::StartEndGameTimer()
+{
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(
+		TimerHandle,
+		this,
+		&AToonTanksGameMode::HandleEndGame,
+		5.f,
+		false
+	);
 }
 
 void AToonTanksGameMode::ActorDied(AActor* DeadActor)
@@ -152,4 +170,9 @@ float AToonTanksGameMode::GetEnemyDamageBonus()
 int32 AToonTanksGameMode::GetCurrentWave() const
 {
 	return CurrentWave;
+}
+
+bool AToonTanksGameMode::GetGameEnded() const
+{
+	return bGameEnded;
 }

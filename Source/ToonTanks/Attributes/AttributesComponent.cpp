@@ -120,11 +120,15 @@ void UAttributesComponent::DamageTaken(AActor* DamagedActor, float Damage, const
 			}
 		}
 
+		AToonTanksGameMode* GameMode = Cast<AToonTanksGameMode>(UGameplayStatics::GetGameMode(this));
+		if (GameMode)
+		{
+			if (GameMode->GetGameEnded()) return;
+		}
 		OnHealthUpdated.Broadcast();
 
 		if (Health <= 0)
 		{
-			AToonTanksGameMode* GameMode = Cast<AToonTanksGameMode>(UGameplayStatics::GetGameMode(this));
 			if (GameMode)
 			{
 				OnActorDied.Broadcast();

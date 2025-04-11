@@ -33,7 +33,7 @@ void APUSpawner::BeginPlay()
 void APUSpawner::SpawnPowerUp()
 {
 	UE_LOG(LogTemp, Display, TEXT("Trying to spawn item"));
-	if (UKismetMathLibrary::RandomBoolWithWeight(0.5f))
+	if (UKismetMathLibrary::RandomBoolWithWeight(0.6f))
 	{
 		
 		UE_LOG(LogTemp, Display, TEXT("Spawning item somewhere"));
@@ -46,7 +46,7 @@ void APUSpawner::SpawnPowerUp()
 		FRotator Rotation = FRotator::ZeroRotator;
 
 		FPassive Passive;
-		if (DropsNumber == 8)
+		if (DropsNumber == 7)
 		{
 			UE_LOG(LogTemp, Display, TEXT("Spawning Health"));
 			Passive.MaxDuration = HealthDuration;

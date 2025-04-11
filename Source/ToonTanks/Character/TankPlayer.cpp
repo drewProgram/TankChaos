@@ -15,8 +15,9 @@ ATankPlayer::ATankPlayer()
 {
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(TurretMesh);
-	CameraBoom->TargetArmLength = 800.0f; // The camera follows at this distance behind the character	
+	CameraBoom->TargetArmLength = 1000.0f; // The camera follows at this distance behind the character	
 	CameraBoom->bUsePawnControlRotation = false; // Do not rotate the arm based on the controller
+	CameraBoom->bDoCollisionTest = false;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	CameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
@@ -40,6 +41,8 @@ void ATankPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Triggered, this, &ATankPlayer::Shoot);
 
 		EnhancedInputComponent->BindAction(ShootSpecialAction, ETriggerEvent::Triggered, this, &ATankPlayer::ShootSpecial);
+
+		EnhancedInputComponent->BindAction(OpenMenuAction, ETriggerEvent::Triggered, this, &ATankPlayer::OpenMenu);
 	}
 	else
 	{
@@ -87,7 +90,7 @@ void ATankPlayer::TurnTurret(const FInputActionValue& Value)
 		double DeltaTime = UGameplayStatics::GetWorldDeltaSeconds(GetWorld());
 
 		DeltaRotation.Yaw = LookAxisVector.X * DeltaTime * TurnRate;
-		CameraBoom->AddLocalRotation(DeltaRotation);
+		//CameraBoom->AddLocalRotation(DeltaRotation);
 		TurretMesh->AddLocalRotation(DeltaRotation);
 	}
 }

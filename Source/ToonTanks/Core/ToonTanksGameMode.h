@@ -33,6 +33,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	int32 GetCurrentWave() const;
 
+	UFUNCTION(BlueprintCallable)
+	bool GetGameEnded() const;
+
 	FOnWaveStartedDelegate OnWaveStarted;
 	FOnCountdownEnded OnCountdownEnded;
 	
@@ -45,9 +48,17 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void GameOver(bool bWonGame);
 
+	UFUNCTION(BlueprintCallable)
+	void StartEndGameTimer();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void HandleEndGame();
+
 	UPROPERTY(VisibleAnywhere, BlueprintGetter = GetCurrentWave, Category = "Wave")
 	int32 CurrentWave;
 
+	UPROPERTY(BlueprintGetter=GetGameEnded, BlueprintReadWrite)
+	bool bGameEnded;
 private:
 	class ATankPlayer* TankPlayer;
 	class AToonTanksPlayerController* PlayerController;
@@ -59,6 +70,7 @@ private:
 
 	int32 TargetTowers;
 	int32 TotalEnemies;
+
 
 
 	UPROPERTY(EditDefaultsOnly, Category = "Global Enemy Attribute Bonus")

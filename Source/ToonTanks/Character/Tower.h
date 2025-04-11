@@ -35,6 +35,7 @@ protected:
 	UFUNCTION()
 	void HandleStatusApplied(FGameplayTag StatusTag, float Duration);
 	void HandleStatusRemoved();
+	void HandleGameOver();
 
 private:
 	UPROPERTY(VisibleAnywhere)
